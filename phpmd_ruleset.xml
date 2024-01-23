@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<ruleset name="Basic">
+    <!-- Import all rule sets -->
+    <rule ref="rulesets/cleancode.xml">
+        <exclude name="MissingImport" />
+        <exclude name="StaticAccess" />
+    </rule>
+    <rule ref="rulesets/codesize.xml" />
+    <rule ref="rulesets/controversial.xml" />
+    <rule ref="rulesets/design.xml" />
+    <rule ref="rulesets/unusedcode.xml"/>
+
+    <rule ref="rulesets/naming.xml/ShortVariable">
+        <properties>
+            <property name="exceptions" value="id,i,j,k,iv,io" />
+        </properties>
+    </rule>
+
+    <rule ref="rulesets/codesize.xml/CyclomaticComplexity">
+        <properties>
+            <property name="reportLevel" value="7"/>
+        </properties>
+    </rule>
+
+    <exclude-pattern>*/Test/*</exclude-pattern>
+    <exclude-pattern>*/Tests/*</exclude-pattern>
+
+</ruleset>

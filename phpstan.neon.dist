@@ -1,0 +1,10 @@
+parameters:
+    level: max
+    excludePaths:
+        - var/*
+    paths:
+        - src
+
+includes:
+    - vendor/phpstan/phpstan-phpunit/rules.neon
+    - vendor/phpstan/phpstan-phpunit/extension.neon

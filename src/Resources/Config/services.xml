@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<container
+        xmlns="http://symfony.com/schema/dic/services"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd"
+>
+    <services>
+        <defaults
+                autowire="true"
+                autoconfigure="true"
+                public="true"
+        />
+
+        <!-- Password History -->
+        <service
+                id="Choks\PasswordPolicy\Service\PasswordHistory"
+                class="Choks\PasswordPolicy\Service\PasswordHistory"
+        />
+
+        <service
+                id="Choks\PasswordPolicy\Contract\PasswordHistoryInterface"
+                alias="Choks\PasswordPolicy\Service\PasswordHistory"
+        />
+
+        <service
+                id="password_policy.history"
+                alias="Choks\PasswordPolicy\Service\PasswordHistory"
+        />
+
+        <!-- Policy Checker -->
+        <service
+                id="Choks\PasswordPolicy\Service\PolicyChecker"
+                class="Choks\PasswordPolicy\Service\PolicyChecker"
+        >
+            <argument key="$specialChars" type="string">%password_policy.special_chars%</argument>
+            <argument key="$trim">%password_policy.trim%</argument>
+        </service>
+
+        <service
+                id="Choks\PasswordPolicy\Contract\PolicyCheckerInterface"
+                alias="Choks\PasswordPolicy\Service\PolicyChecker"
+        />
+
+        <service
+                id="password_policy.checker"
+                alias="Choks\PasswordPolicy\Service\PolicyChecker"
+        />
+
+        <service
+                id="Choks\PasswordPolicy\Service\Crypt"
+                class="Choks\PasswordPolicy\Service\Crypt"
+        >
+            <argument key="$cipherMethod">%password_policy.cipher_method%</argument>
+            <argument key="$salt">%password_policy.salt%</argument>
+        </service>
+    </services>
+</container>

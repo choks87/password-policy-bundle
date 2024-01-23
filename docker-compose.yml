@@ -1,0 +1,25 @@
+version: '3.4'
+
+services:
+  php:
+    container_name: php
+    hostname: php
+    build:
+      context: ./docker/php
+      target: development
+    volumes:
+      - ./:/app
+      - ~/.bash_history:/root/.bash_history
+    environment:
+      PHP_IDE_CONFIG: "serverName=php"
+    tty: true
+
+  database:
+    image: mysql/mysql-server:latest
+    ports:
+      - '3306:3306'
+    environment:
+      MYSQL_ROOT_PASSWORD: db
+      MYSQL_USER: db
+      MYSQL_PASSWORD: db
+      MYSQL_DATABASE: db

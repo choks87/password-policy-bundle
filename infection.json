@@ -1,0 +1,21 @@
+{
+    "timeout": 10,
+    "source": {
+        "directories": [
+            "src"
+        ]
+    },
+    "logs": {
+        "html": ".analysis\/infection\/infection.html",
+        "text": ".analysis\/infection\/infection.log",
+        "summary": ".analysis\/infection\/infection-summary.log"
+    },
+    "mutators": {
+        "@default": true,
+        "ProtectedVisibility": false
+    },
+    "phpUnit": {
+        "customPath": "vendor/bin/phpunit"
+    },
+    "minMsi": 75
+}
