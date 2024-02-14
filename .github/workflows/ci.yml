@@ -1,0 +1,28 @@
+name: Pipeline
+
+on:
+  push:
+  pull_request:
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Build the Docker image
+        run: sudo docker-compose up -d --quiet-pull
+
+      - name: Install dependencies
+        run: sudo docker-compose exec -T php composer install --no-interaction
+
+      - name: Code check
+        run: sudo docker-compose exec -T php make code-check
+
+      - name: Tests
+        run: sudo docker-compose exec -T php make test

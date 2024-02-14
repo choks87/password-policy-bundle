@@ -1,3 +1,5 @@
+.circleci export-ignore
+.github export-ignore
 tests export-ignore
 docker export-ignore
 .gitignore export-ignore

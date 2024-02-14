@@ -15,7 +15,9 @@ services:
     tty: true
 
   database:
+    hostname: database
     image: mysql/mysql-server:latest
+    tty: true
     ports:
       - '3306:3306'
     environment:

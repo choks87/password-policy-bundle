@@ -1,3 +1,4 @@
+![CI](https://github.com/choks87/password-policy-bundle/actions/workflows/ci.yml/badge.svg)
 # What is this?
 Password Policy is a Symfony Bundle where you can validate user passwords against policy.
 
