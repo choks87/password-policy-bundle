@@ -169,10 +169,9 @@ class User implements PasswordPolicySubjectInterface
         return $this->plainPassword;
     }
 }
-
-At the momnent of saving entity, if validation fails, the `Choks\PasswordPolicy\Exception\PolicyCheckException` will be 
-thrown. If you catch it, you can examine violations via `getViolations()`,
 ```
+At the momnent of saving entity, if validation fails, the `Choks\PasswordPolicy\Exception\PolicyCheckException` will be
+thrown. If you catch it, you can examine violations via `getViolations()`,
 
 ## Clearing all password history
 In some cases, you want to clear all passwords from history.
@@ -253,7 +252,6 @@ CREATE INDEX IDX_F352144A76ED395
 
 # What is planned to be done in future (not promised)?
 - Another part of policy, for password policy expiration
-- Redis Storage provider for password history, currently only supported is `dbal`
 - Custom Policy provider per entity, defined via #[Listen]
 
 # Contribute
@@ -261,8 +259,6 @@ Feel free to contribute, at any time. Please provide new tests or tests changed.
 Also, if you find some bug, open an issue and will try to fix it as soon as possible.
 
 # Todo
-- [ ] Add recipe
 - [ ] Customization of messages / Translation
-- [ ] Redis Adapter for storing history
 - [ ] Garbage collection for passwords in history (FILO, per User)
 - [ ] Support schema update without Doctrine ORM, without PostSchema listener

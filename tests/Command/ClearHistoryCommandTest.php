@@ -3,24 +3,23 @@ declare(strict_types=1);
 
 namespace Choks\PasswordPolicy\Tests\Command;
 
+use Choks\PasswordPolicy\Adapter\ArrayStorageAdapter;
+use Choks\PasswordPolicy\Contract\StorageAdapterInterface;
 use Choks\PasswordPolicy\Service\PasswordHistory;
 use Choks\PasswordPolicy\Tests\KernelTestCase;
 use Choks\PasswordPolicy\Tests\Resources\App\Entity\Subject;
-use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
 
 final class ClearHistoryCommandTest extends KernelTestCase
 {
-    private Connection      $connection;
-    private string          $tableName;
-    private PasswordHistory $passwordHistory;
+    private PasswordHistory     $passwordHistory;
+    private ArrayStorageAdapter $storageAdapter;
 
     protected function setUp(): void
     {
+        $this->storageAdapter  = self::getContainer()->get(StorageAdapterInterface::class);
         $this->passwordHistory = self::getContainer()->get(PasswordHistory::class);
-        $this->connection      = self::getContainer()->get('password_policy.storage.dbal.connection');
-        $this->tableName       = self::getContainer()->getParameter('password_policy.storage.dbal.table');
     }
 
     public function testExecute(): void
@@ -41,10 +40,7 @@ final class ClearHistoryCommandTest extends KernelTestCase
 
     private function getNumberOfRecords(): int
     {
-        return (int)$this
-                        ->connection
-                        ->executeQuery(\sprintf("SELECT COUNT(*) FROM %s", $this->tableName))
-                        ->fetchFirstColumn()[0];
+        return \count($this->storageAdapter->getListByReference());
     }
 
     private function addSomePasswords(): void

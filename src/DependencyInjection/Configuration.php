@@ -5,11 +5,15 @@ namespace Choks\PasswordPolicy\DependencyInjection;
 
 use Choks\PasswordPolicy\Enum\PeriodUnit;
 use Choks\PasswordPolicy\Service\ConfigurationPolicyProvider;
+use Symfony\Component\Cache\Adapter\AdapterInterface;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 
+/**
+ * @codeCoverageIgnore
+ */
 class Configuration implements ConfigurationInterface
 {
     public function getConfigTreeBuilder(): TreeBuilder
@@ -106,11 +110,18 @@ class Configuration implements ConfigurationInterface
     private function getStorageConfiguration(): NodeDefinition
     {
         $node = new ArrayNodeDefinition('storage');
+        $defaultStorageValue = [
+            'dbal' => [
+                'table'      => 'password_history',
+                'connection' => 'default',
+            ],
+        ];
+
         /**
          * @phpstan-ignore-next-line
          */
         $node
-            ->addDefaultsIfNotSet()
+            ->treatNullLike($defaultStorageValue)
             ->children()
                 ->arrayNode('dbal')
                     ->children()
@@ -124,6 +135,22 @@ class Configuration implements ConfigurationInterface
                         ->end()
                     ->end()
                 ->end()
+
+                ->arrayNode('cache')
+                    ->children()
+                        ->scalarNode('adapter')
+                            ->info('Cache Adapter, must be instance of ' . AdapterInterface::class)
+                        ->end()
+                        ->scalarNode('key_prefix')
+                            ->defaultValue('password_policy')
+                            ->info('Each subject (user) password history is on key. Needs to be prefixed.')
+                        ->end()
+                    ->end()
+                ->end()
+
+                ->scalarNode('array')
+                ->end()
+
             ->end();
 
         return $node;

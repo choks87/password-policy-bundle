@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Choks\PasswordPolicy\Model;
 
 use Choks\PasswordPolicy\Contract\HistoryPolicyInterface;
+use Choks\PasswordPolicy\Exception\RuntimeException;
 
 final class HistoryPolicy implements HistoryPolicyInterface
 {
@@ -43,7 +44,7 @@ final class HistoryPolicy implements HistoryPolicyInterface
     public function backTrackStartDateTime(): \DateTimeImmutable
     {
         if (!$this->hasPeriod()) {
-            throw new \LogicException('History Time period cannot be determined. Not configured.');
+            throw new RuntimeException('History Time period cannot be determined. Not configured.');
         }
 
         $interval = \DateInterval::createFromDateString(
@@ -51,7 +52,7 @@ final class HistoryPolicy implements HistoryPolicyInterface
         );
 
         if (false === $interval) {
-            throw new \RuntimeException('History Time period cannot be determined. Bad interval.');
+            throw new RuntimeException('History Time period cannot be determined. Bad interval.');
         }
 
         return (new \DateTimeImmutable())->sub($interval);

@@ -3,13 +3,13 @@ declare(strict_types=1);
 
 namespace Choks\PasswordPolicy\Tests;
 
-use Choks\PasswordPolicy\Tests\Resources\App\PasswordPolicyTestKernel;
+use Choks\PasswordPolicy\Tests\Resources\App\PasswordPolicyWithDbalTestKernel;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
-class KernelTestCase extends WebTestCase
+class KernelWithDbalAdapterTestCase extends WebTestCase
 {
     protected static function getKernelClass(): string
     {
-        return PasswordPolicyTestKernel::class;
+        return PasswordPolicyWithDbalTestKernel::class;
     }
 }

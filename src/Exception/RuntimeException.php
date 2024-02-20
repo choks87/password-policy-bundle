@@ -5,7 +5,7 @@ namespace Choks\PasswordPolicy\Exception;
 
 use Choks\PasswordPolicy\Contract\ExceptionInterface;
 
-final class CryptException extends \LogicException implements ExceptionInterface
+final class RuntimeException extends \RuntimeException implements ExceptionInterface
 {
 
 }

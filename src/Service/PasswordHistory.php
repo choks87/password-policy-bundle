@@ -8,6 +8,7 @@ use Choks\PasswordPolicy\Contract\PasswordPolicySubjectInterface;
 use Choks\PasswordPolicy\Contract\StorageAdapterInterface;
 use Choks\PasswordPolicy\Contract\HistoryPolicyInterface;
 use Choks\PasswordPolicy\Contract\PasswordHistoryInterface;
+use Choks\PasswordPolicy\Exception\InvalidArgumentException;
 
 final class PasswordHistory implements PasswordHistoryInterface
 {
@@ -20,7 +21,7 @@ final class PasswordHistory implements PasswordHistoryInterface
     public function add(PasswordPolicySubjectInterface $subject): void
     {
         if (null === $subject->getPlainPassword()) {
-            throw new \InvalidArgumentException('Cannot add null password to history.');
+            throw new InvalidArgumentException('Cannot add null password to history.');
         }
         $hashedPassword = $this->crypt->encrypt($subject->getPlainPassword());
 
@@ -35,7 +36,7 @@ final class PasswordHistory implements PasswordHistoryInterface
     public function isUsed(PasswordPolicySubjectInterface $subject, HistoryPolicyInterface $historyPolicy): bool
     {
         if (null === $subject->getPlainPassword()) {
-            throw new \InvalidArgumentException('Cannot check for null password for previous usage.');
+            throw new InvalidArgumentException('Cannot check for null password for previous usage.');
         }
 
         if (!$historyPolicy->isValid()) {
