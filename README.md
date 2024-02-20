@@ -18,8 +18,8 @@ Add to your bundles:
 Choks\PasswordPolicy\PasswordPolicy::class => ['all' => true],
 ```
 
-If you are using doctrine, when generating schema, a table for storing Password History will be installed
-automatically. If don't, you will need to [create it manually](#table-for-storing-history). Currently, only dbal storage is supported.
+If you are using doctrine and DBAL storage, when generating schema, a table for storing Password History will be installed
+automatically. If don't, you will need to [create it manually](#table-for-storing-history). 
 
 # Usage
 Before we dig, let's explain how it works. First, you can use validation against policy on any object as long
@@ -224,10 +224,13 @@ password_policy:
         unit: 'month' # Possible values are 'day', 'week', 'year' (default is null) 
         value: 1  (default is null)
 
-  storage:
+  storage: # Only one storage can be defined. Storage is used to store password history
     dbal:
         table: 'password_history' # Name of the table where historic passwords should be stored.
         connection: 'default' # Doctrine DBAL connection name.
+    cache:
+      adapter: cache.app # your application cache adapter (see Symfony framework cache docs)
+      key_prefix: 'password_history' # Prefix used for cache keys
 ```
 Note: `not_used_in_past_n_passwords` and `period` could be used combined or independent (one set, other not). But in o
 order to use period, both unit and value must be set.
