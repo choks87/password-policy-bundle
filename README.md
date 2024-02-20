@@ -262,6 +262,5 @@ Feel free to contribute, at any time. Please provide new tests or tests changed.
 Also, if you find some bug, open an issue and will try to fix it as soon as possible.
 
 # Todo
-- [ ] Customization of messages / Translation
 - [ ] Garbage collection for passwords in history (FILO, per User)
 - [ ] Support schema update without Doctrine ORM, without PostSchema listener
