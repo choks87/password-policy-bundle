@@ -44,10 +44,8 @@ class PasswordPolicyTestKernel extends Kernel
         $container->extension(
             'password_policy',
             [
+                'storage' => $this->getStorageConfig(),
                 'salt'    => 'foo',
-                'storage' => [
-                    'dbal' => [],
-                ],
                 'policy'  => [
                     'character' => [
                         'min_length' => 8,
@@ -90,6 +88,9 @@ class PasswordPolicyTestKernel extends Kernel
                 'php_errors'            => [
                     'log' => true,
                 ],
+                'cache' => [
+                    'app' => 'cache.adapter.array'
+                ]
             ]
         );
 
@@ -116,11 +117,12 @@ class PasswordPolicyTestKernel extends Kernel
         ]);
 
         $container->services()->set('logger', NullLogger::class);
-        $this->registerServices($container);
     }
 
-    public function registerServices(ContainerConfigurator $container): void
+    protected function getStorageConfig(): array
     {
-
+        return [
+            'array' => null,
+        ];
     }
 }

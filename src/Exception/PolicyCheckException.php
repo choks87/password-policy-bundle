@@ -3,9 +3,10 @@ declare(strict_types=1);
 
 namespace Choks\PasswordPolicy\Exception;
 
+use Choks\PasswordPolicy\Contract\ExceptionInterface;
 use Choks\PasswordPolicy\Violation\ViolationList;
 
-final class PolicyCheckException extends \Exception
+final class PolicyCheckException extends \Exception implements ExceptionInterface
 {
     public function __construct(
         private readonly ViolationList $violations,

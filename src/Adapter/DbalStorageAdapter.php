@@ -12,8 +12,8 @@ use Doctrine\ORM\Tools\Event\GenerateSchemaEventArgs;
 final class DbalStorageAdapter implements StorageAdapterInterface
 {
     public function __construct(
-        private readonly string     $tableName,
         private readonly Connection $connection,
+        private readonly string     $tableName,
     ) {
     }
 
@@ -60,15 +60,15 @@ final class DbalStorageAdapter implements StorageAdapterInterface
      */
     public function getPastPasswords(
         PasswordPolicySubjectInterface $subject,
-        ?int                           $lastN,
-        ?\DateTimeImmutable            $startingFrom,
+        ?int                           $lastN = null,
+        ?\DateTimeImmutable            $startingFrom = null,
     ): iterable {
         $queryBuilder = $this->connection->createQueryBuilder();
 
         $queryBuilder
             ->select('h.password')
             ->from($this->tableName, 'h')
-            ->orderBy('h.created_at', 'asc')
+            ->orderBy('h.created_at', 'desc')
             ->where('h.subject_id = :subject_id')
             ->setParameter('subject_id', $subject->getIdentifier())
         ;

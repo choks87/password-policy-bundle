@@ -169,10 +169,9 @@ class User implements PasswordPolicySubjectInterface
         return $this->plainPassword;
     }
 }
-
-At the momnent of saving entity, if validation fails, the `Choks\PasswordPolicy\Exception\PolicyCheckException` will be 
-thrown. If you catch it, you can examine violations via `getViolations()`,
 ```
+At the momnent of saving entity, if validation fails, the `Choks\PasswordPolicy\Exception\PolicyCheckException` will be
+thrown. If you catch it, you can examine violations via `getViolations()`,
 
 ## Clearing all password history
 In some cases, you want to clear all passwords from history.

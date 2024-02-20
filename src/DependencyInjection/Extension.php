@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace Choks\PasswordPolicy\DependencyInjection;
 
+use Choks\PasswordPolicy\Adapter\ArrayStorageAdapter;
+use Choks\PasswordPolicy\Adapter\CacheStorageAdapter;
 use Choks\PasswordPolicy\Adapter\DbalStorageAdapter;
 use Choks\PasswordPolicy\Contract\StorageAdapterInterface;
 use Choks\PasswordPolicy\Contract\PolicyProviderInterface;
@@ -21,7 +23,12 @@ use Symfony\Component\DependencyInjection\Reference;
  *           dbal: array{
  *               connection: string,
  *               table: string
- *           }
+ *           },
+*            cache: array{
+ *                adapter: string,
+ *                key_prefix: string
+ *            },
+ *            array: null,
  *       }
  *
  * @psalm-type Config = array{
@@ -50,6 +57,9 @@ use Symfony\Component\DependencyInjection\Reference;
  *     },
  *     storage: StorageConfig
  * }
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ * TODO: Split extension into more files to avoid `CouplingBetweenObjects`
  */
 final class Extension extends SymfonyExtension
 {
@@ -84,7 +94,7 @@ final class Extension extends SymfonyExtension
         $container->setParameter('password_policy.salt', $config['salt']);
         $container->setParameter('password_policy.cipher_method', $config['cipher_method']);
 
-        $this->registerStorageAdapter($container, $config['storage']);
+        $this->registerStorageAdapter($container, $config['storage'] ?? []);
 
         $loader = new XmlFileLoader($container, new FileLocator(__DIR__.'/../Resources/Config'));
         $loader->load('services.xml');
@@ -118,7 +128,7 @@ final class Extension extends SymfonyExtension
             ];
         }
 
-        if (\count($storageConfig) > 1) { // @phpstan-ignore-line (cannot happen now, but when we add adapter, it will)
+        if (\count($storageConfig) > 1) {
             throw new InvalidConfigurationException('You can choose only one storage config.');
         }
 
@@ -138,6 +148,18 @@ final class Extension extends SymfonyExtension
 
             $container->setAlias('password_policy.storage.dbal.connection', $connectionServiceId);
             $container->setParameter('password_policy.storage.dbal.table', $tableName);
+        }
+
+        if (\array_key_exists('cache', $storageConfig)) {
+            $definition          = new Definition(CacheStorageAdapter::class);
+            $definition
+                ->setArgument('$cache', new Reference($storageConfig['cache']['adapter']))
+                ->setArgument('$keyPrefix', $storageConfig['cache']['key_prefix']);
+        }
+
+        // For test only.
+        if (\array_key_exists('array', $storageConfig)) {
+            $definition          = new Definition(ArrayStorageAdapter::class);
         }
 
         $definition->setPublic(false);

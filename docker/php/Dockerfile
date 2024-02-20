@@ -22,7 +22,9 @@ RUN docker-php-ext-install ctype
 RUN docker-php-ext-install xml
 RUN docker-php-ext-install zip
 RUN docker-php-ext-install pdo_mysql
+RUN docker-php-ext-install redis
 RUN php-ext-enable pdo_mysql
+RUN php-ext-enable redis
 
 # Install composer
 RUN curl -sSk https://getcomposer.org/installer | php -- --disable-tls && \

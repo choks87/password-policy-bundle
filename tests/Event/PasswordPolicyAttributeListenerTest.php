@@ -5,13 +5,15 @@ namespace Choks\PasswordPolicy\Tests\Event;
 
 use Choks\PasswordPolicy\Exception\PolicyCheckException;
 use Choks\PasswordPolicy\Tests\KernelTestCase;
+use Choks\PasswordPolicy\Tests\KernelWithDbalAdapterTestCase;
 use Choks\PasswordPolicy\Tests\Resources\App\Entity\ListenedSubject;
 use Choks\PasswordPolicy\Tests\Resources\App\Entity\Subject;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 
-final class PasswordPolicyAttributeListenerTest extends KernelTestCase
+final class PasswordPolicyAttributeListenerTest extends KernelWithDbalAdapterTestCase
 {
+
     private EntityManagerInterface $entityManager;
 
     private Connection $connection;

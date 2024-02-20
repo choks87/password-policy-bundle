@@ -3,28 +3,31 @@ declare(strict_types=1);
 
 namespace Choks\PasswordPolicy\Tests\Service;
 
+use Choks\PasswordPolicy\Adapter\ArrayStorageAdapter;
 use Choks\PasswordPolicy\Contract\HistoryPolicyInterface;
+use Choks\PasswordPolicy\Contract\StorageAdapterInterface;
+use Choks\PasswordPolicy\Model\HistoryPolicy;
 use Choks\PasswordPolicy\Service\PasswordHistory;
 use Choks\PasswordPolicy\Tests\KernelTestCase;
 use Choks\PasswordPolicy\Tests\Resources\App\Entity\Subject;
-use Choks\PasswordPolicy\Model\HistoryPolicy;
-use Doctrine\DBAL\Connection;
-use Doctrine\DBAL\Types\Types;
 
 /**
  * @group time-sensitive
  */
 final class PasswordHistoryTest extends KernelTestCase
 {
-    private Connection      $connection;
-    private string          $tableName;
-    private PasswordHistory $passwordHistory;
+    private PasswordHistory         $passwordHistory;
+    private StorageAdapterInterface $storageAdapter;
 
     protected function setUp(): void
     {
+        $this->storageAdapter  = self::getContainer()->get(StorageAdapterInterface::class);
         $this->passwordHistory = self::getContainer()->get(PasswordHistory::class);
-        $this->connection      = self::getContainer()->get('password_policy.storage.dbal.connection');
-        $this->tableName       = self::getContainer()->getParameter('password_policy.storage.dbal.table');
+        $this->passwordHistory->clear();
+    }
+
+    protected function tearDown(): void
+    {
         $this->passwordHistory->clear();
     }
 
@@ -43,7 +46,7 @@ final class PasswordHistoryTest extends KernelTestCase
             $this->passwordHistory->add($subject->setPlainPassword($password));
         }
 
-        $this->decreaseDateTimeInDB(5000);
+        $this->decreaseDateTimeInStorage(5000);
 
         $isUsed = $this->passwordHistory->isUsed($subject->setPlainPassword($currentPassword), $policy);
 
@@ -108,7 +111,7 @@ final class PasswordHistoryTest extends KernelTestCase
 
         $this->passwordHistory->add($subject);
 
-        $this->decreaseDateTimeInDB($interval);
+        $this->decreaseDateTimeInStorage($interval);
 
         $isUsed = $this->passwordHistory->isUsed($subject, $policy);
 
@@ -141,29 +144,18 @@ final class PasswordHistoryTest extends KernelTestCase
         self::assertFalse($result);
     }
 
-    private function decreaseDateTimeInDB(int $intervalSec): void
+    protected function decreaseDateTimeInStorage(int $intervalSec): void
     {
-        $rows = $this->connection
-            ->createQueryBuilder()
-            ->select('h.*')
-            ->from($this->tableName, 'h')
-            ->executeQuery()
-            ->iterateAssociative()
-        ;
+        if (!$this->storageAdapter instanceof ArrayStorageAdapter) {
+            throw new \Exception('For test, only use ArrayStorage Adapter.');
+        }
 
-        foreach ($rows as $index => $row) {
-            $createdAt    = new \DateTimeImmutable($row['created_at']);
-            $newCreatedAt = $createdAt->setTimestamp($createdAt->getTimestamp() - ($intervalSec * ($index + 1)));
+        $list = &$this->storageAdapter->getListByReference();
 
-            $this->connection
-                ->update($this->tableName,
-                         [
-                             'created_at' => $newCreatedAt->format(DATE_ATOM),
-                         ],
-                         [
-                             'subject_id' => $row['subject_id'],
-                             'password'   => $row['password'],
-                         ],
+        foreach ($list as $index => &$item) {
+            $item['created_at'] = $item['created_at']
+                ->setTimestamp(
+                    $item['created_at']->getTimestamp() - ($intervalSec * ($index + 1))
                 )
             ;
         }

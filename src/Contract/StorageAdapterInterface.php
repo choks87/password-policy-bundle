@@ -12,7 +12,7 @@ interface StorageAdapterInterface
     /**
      * @return iterable<string>
      */
-    public function getPastPasswords(PasswordPolicySubjectInterface $subject, ?int $lastN, ?\DateTimeImmutable $startingFrom): iterable;
+    public function getPastPasswords(PasswordPolicySubjectInterface $subject, ?int $lastN = null, ?\DateTimeImmutable $startingFrom = null): iterable;
 
     public function clear(): void;
 }

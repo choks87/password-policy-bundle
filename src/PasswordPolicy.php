@@ -8,6 +8,9 @@ use Choks\PasswordPolicy\DependencyInjection\Extension;
 use Symfony\Component\DependencyInjection\Extension\ExtensionInterface;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 
+/**
+ * @codeCoverageIgnore
+ */
 final class PasswordPolicy extends Bundle
 {
     public function getNamespace(): string

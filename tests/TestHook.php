@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Choks\PasswordPolicy\Tests;
 
-use Choks\PasswordPolicy\Tests\Resources\App\PasswordPolicyTestKernel;
+use Choks\PasswordPolicy\Tests\Resources\App\PasswordPolicyWithDbalTestKernel;
 use PHPUnit\Runner\AfterLastTestHook;
 use PHPUnit\Runner\BeforeFirstTestHook;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
@@ -39,7 +39,7 @@ final class TestHook implements BeforeFirstTestHook, AfterLastTestHook
 
     private function bootApplication(): Application
     {
-        $kernel = new PasswordPolicyTestKernel('test', false);
+        $kernel = new PasswordPolicyWithDbalTestKernel('test', false);
         $kernel->boot();
         $application = new Application($kernel);
         $application->setAutoExit(false);
@@ -54,10 +54,10 @@ final class TestHook implements BeforeFirstTestHook, AfterLastTestHook
         foreach (self::COMMANDS as $command) {
             try {
                 if (Command::SUCCESS !== $app->run(new ArrayInput($command), $output)) {
-                    printf('Command Failed: %s', $output->getErrorOutput());
+                    \printf('Command Failed');
                 }
             } catch (\Exception $e) {
-                printf('Exception: %s', $e->getMessage());
+                \printf('Exception: %s', $e->getMessage());
             }
         }
     }
