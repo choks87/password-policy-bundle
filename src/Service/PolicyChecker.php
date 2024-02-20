@@ -12,12 +12,14 @@ use Choks\PasswordPolicy\Contract\PolicyCheckerInterface;
 use Choks\PasswordPolicy\Contract\PolicyProviderInterface;
 use Choks\PasswordPolicy\Violation\Violation;
 use Choks\PasswordPolicy\Violation\ViolationList;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 final class PolicyChecker implements PolicyCheckerInterface
 {
     public function __construct(
         private readonly PolicyProviderInterface  $policyProvider,
         private readonly PasswordHistoryInterface $passwordHistory,
+        private readonly TranslatorInterface      $translator,
         private readonly string                   $specialChars,
         private readonly bool                     $trim,
     ) {
@@ -51,21 +53,32 @@ final class PolicyChecker implements PolicyCheckerInterface
         $isUsed = $this->passwordHistory->isUsed($subject, $policy);
 
         if ($isUsed) {
-            $msg = '';
+            $msg   = [];
+            $msg[] = $this->translator->trans('violation.password_is_already_used', [], 'password_policy');
 
             if ((int)$policy->getBackTrackCount() > 0) {
-                $msg .= \sprintf("Last %s passwords.",
-                                 $policy->getBackTrackCount());
+                $msg[] = $this->translator->trans(
+                    'violation.in_last_n_passwords',
+                    ['%number%' => $policy->getBackTrackCount()],
+                    'password_policy'
+                );
             }
 
             if ($policy->hasPeriod()) {
-                $msg .= \sprintf("In past %d %s(s).", $policy->getBackTrackTimeValue(),
-                                 $policy->getBackTrackTimeValue());
+                $unitTranslation = $this->translator->trans(
+                    'enum.'.$policy->getBackTrackTimeUnit(),
+                    [],
+                    'password_policy'
+                );
+
+                $msg[] = $this->translator->trans(
+                    'violation.in_past_x_y',
+                    ['%number%' => $policy->getBackTrackTimeValue(), '%unit%' => $unitTranslation],
+                    'password_policy'
+                );
             }
 
-            $violations->add(
-                new Violation(\sprintf('Password is used in past (%s)', $msg))
-            );
+            $violations->add(new Violation(\implode(' ', $msg)));
         }
     }
 
@@ -86,42 +99,43 @@ final class PolicyChecker implements PolicyCheckerInterface
             [
                 \strlen($plainPassword),
                 $policy->getMinLength(),
-                'Has to be at least %d characters.',
+                'violation.at_least_chars',
             ],
             [
                 \preg_match_all('/\d/', $plainPassword),
                 $policy->getMinNumerics(),
-                'Has to be at least %d numeric character(s).',
+                'violation.at_least_numerics',
             ],
             [
                 \preg_match_all('/\p{Ll}/u', $plainPassword),
                 $policy->getMinLowercase(),
-                'Has to be at least %d lowercase character(s).',
+                'violation.at_least_lowercase',
             ],
             [
                 \preg_match_all('/\p{Lu}/u', $plainPassword),
                 $policy->getMinUppercase(),
-                'Has to be at least %d uppercase character(s).',
+                'violation.at_least_uppercase',
             ],
             [
                 $this->countSpecialChars($plainPassword),
                 $policy->getMinSpecials(),
-                'Has to be at least %d special character(s).',
+                'violation.at_least_special',
             ],
         ];
 
         foreach ($matrix as $item) {
             [$count, $minRequired, $message] = $item;
             if (null !== $minRequired && $count < $minRequired) {
-                $violations->add(new Violation(\sprintf($message, $minRequired)));
+                $violations->add(
+                    new Violation($this->translator->trans($message, ['%number%' => $minRequired], 'password_policy')
+                    )
+                );
             }
         }
     }
 
-    private
-    function countSpecialChars(
-        string $plainPassword,
-    ): int {
+    private function countSpecialChars(string $plainPassword): int
+    {
         $cnt = 0;
 
         $specialChars = \str_split($this->specialChars);
