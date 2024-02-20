@@ -25,12 +25,3 @@ services:
       MYSQL_USER: db
       MYSQL_PASSWORD: db
       MYSQL_DATABASE: db
-
-  redis:
-    container_name: heron-api-redis
-    hostname: heron-api-redis
-    image: redis:6.2-alpine
-    restart: always
-    ports:
-      - "6379:6379"
-    command: redis-server --save 60 1 --loglevel warning

@@ -252,7 +252,6 @@ CREATE INDEX IDX_F352144A76ED395
 
 # What is planned to be done in future (not promised)?
 - Another part of policy, for password policy expiration
-- Redis Storage provider for password history, currently only supported is `dbal`
 - Custom Policy provider per entity, defined via #[Listen]
 
 # Contribute
@@ -260,8 +259,6 @@ Feel free to contribute, at any time. Please provide new tests or tests changed.
 Also, if you find some bug, open an issue and will try to fix it as soon as possible.
 
 # Todo
-- [ ] Add recipe
 - [ ] Customization of messages / Translation
-- [ ] Redis Adapter for storing history
 - [ ] Garbage collection for passwords in history (FILO, per User)
 - [ ] Support schema update without Doctrine ORM, without PostSchema listener
