@@ -149,6 +149,7 @@ class Configuration implements ConfigurationInterface
                 ->end()
 
                 ->scalarNode('array')
+                    ->info('For testing only')
                 ->end()
 
             ->end();
