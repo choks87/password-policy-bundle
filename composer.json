@@ -17,7 +17,9 @@
         "symfony/console": "^6.0|^7.0",
         "symfony/dependency-injection": "^6.0|^7.0",
         "symfony/framework-bundle": "^6.0|^7.0",
-        "symfony/security-bundle": "^6.0|^7.0"
+        "symfony/security-bundle": "^6.0|^7.0",
+        "symfony/translation": "^7.0",
+        "symfony/yaml": "^7.0"
     },
     "require-dev": {
         "dama/doctrine-test-bundle": "^v8.0",

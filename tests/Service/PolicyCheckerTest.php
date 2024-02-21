@@ -3,23 +3,26 @@ declare(strict_types=1);
 
 namespace Choks\PasswordPolicy\Tests\Service;
 
+use Choks\PasswordPolicy\Contract\PasswordHistoryInterface;
 use Choks\PasswordPolicy\Contract\PolicyCheckerInterface;
 use Choks\PasswordPolicy\Tests\KernelTestCase;
 use Choks\PasswordPolicy\Tests\Resources\App\Entity\Subject;
 
 final class PolicyCheckerTest extends KernelTestCase
 {
-    private PolicyCheckerInterface $policyChecker;
+    private PolicyCheckerInterface   $policyChecker;
+    private PasswordHistoryInterface $passwordHistory;
 
     protected function setUp(): void
     {
-        $this->policyChecker = self::getContainer()->get(PolicyCheckerInterface::class);
+        $this->policyChecker   = self::getContainer()->get(PolicyCheckerInterface::class);
+        $this->passwordHistory = self::getContainer()->get(PasswordHistoryInterface::class);
     }
 
     /**
      * @dataProvider providerForValidateTest
      */
-    public function testValidate(?string $password, int $expectedViolationCount): void
+    public function testValidateCharacters(?string $password, int $expectedViolationCount): void
     {
         $subject    = new Subject(1, $password);
         $violations = $this->policyChecker->validate($subject);
@@ -63,5 +66,16 @@ final class PolicyCheckerTest extends KernelTestCase
 
         yield 'Valid Password' => ['FooBar2!', 0];
         yield 'Valid Password with Unicode letters' => ['ФооБар2!', 0];
+    }
+
+    public function testValidateHistory(): void
+    {
+        $subject = new Subject(1, 'FooBarBaz22!@!');
+
+        $this->passwordHistory->add($subject);
+
+        $violations = $this->policyChecker->validate($subject);
+
+        self::assertCount(1, $violations->getViolations());
     }
 }

@@ -142,13 +142,14 @@ class Configuration implements ConfigurationInterface
                             ->info('Cache Adapter, must be instance of ' . AdapterInterface::class)
                         ->end()
                         ->scalarNode('key_prefix')
-                            ->defaultValue('password_policy')
+                            ->defaultValue('password_history')
                             ->info('Each subject (user) password history is on key. Needs to be prefixed.')
                         ->end()
                     ->end()
                 ->end()
 
                 ->scalarNode('array')
+                    ->info('For testing only')
                 ->end()
 
             ->end();
