@@ -46,6 +46,7 @@
                 alias="Choks\PasswordPolicy\Service\PolicyChecker"
         />
 
+        <!-- Crypt -->
         <service
                 id="Choks\PasswordPolicy\Service\Crypt"
                 class="Choks\PasswordPolicy\Service\Crypt"
@@ -53,5 +54,18 @@
             <argument key="$cipherMethod">%password_policy.cipher_method%</argument>
             <argument key="$salt">%password_policy.salt%</argument>
         </service>
+
+        <!-- Expiration -->
+        <service
+                id="Choks\PasswordPolicy\Service\PasswordExpiration"
+                class="Choks\PasswordPolicy\Service\PasswordExpiration"
+        />
+
+        <service
+                id="password_policy.expiration"
+                alias="Choks\PasswordPolicy\Service\PasswordExpiration"
+        />
+
+
     </services>
 </container>

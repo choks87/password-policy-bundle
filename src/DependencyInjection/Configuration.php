@@ -69,6 +69,11 @@ class Configuration implements ConfigurationInterface
         $node
             ->addDefaultsIfNotSet()
                 ->children()
+                    ->arrayNode('expiration')
+                        ->children()
+                            ->append($this->getTimeFrameConfiguration('expires_after'))
+                        ->end()
+                    ->end()
                     ->arrayNode('character')
                         ->children()
                             ->integerNode('min_length')->defaultValue(null)->info('Total minimum character(s).')->end()
@@ -84,22 +89,7 @@ class Configuration implements ConfigurationInterface
                             ->defaultValue(null)
                             ->info('Not used in last N passwords.')
                         ->end()
-                        ->arrayNode('period')
-                            ->addDefaultsIfNotSet()
-                            ->children()
-                                ->enumNode('unit')
-                                    ->defaultValue(null)
-                                    ->info(
-                                        sprintf("Unit of time, possible values: %s .", \implode(', ', PeriodUnit::values()))
-                                    )
-                                    ->values(PeriodUnit::values())
-                                ->end()
-                                ->scalarNode('value')
-                                    ->defaultValue(null)
-                                    ->info("Value of unit.")
-                                ->end()
-                            ->end()
-                        ->end()
+                        ->append($this->getTimeFrameConfiguration('period'))
                     ->end()
                 ->end()
             ->end();
@@ -107,9 +97,35 @@ class Configuration implements ConfigurationInterface
         return $node;
     }
 
+    private function getTimeFrameConfiguration(string $nodeName): NodeDefinition
+    {
+        $node = new ArrayNodeDefinition($nodeName);
+
+        /**
+         * @phpstan-ignore-next-line
+         */
+        $node
+             ->children()
+                 ->enumNode('unit')
+                     ->defaultValue(null)
+                     ->info(
+                         sprintf("Unit of time, possible values: %s .", \implode(', ', PeriodUnit::values()))
+                     )
+                     ->values(PeriodUnit::values())
+                 ->end()
+                 ->scalarNode('value')
+                     ->defaultValue(null)
+                     ->info("Value of unit.")
+                 ->end()
+             ->end();
+
+        return $node;
+    }
+
     private function getStorageConfiguration(): NodeDefinition
     {
         $node = new ArrayNodeDefinition('storage');
+
         $defaultStorageValue = [
             'dbal' => [
                 'table'      => 'password_history',

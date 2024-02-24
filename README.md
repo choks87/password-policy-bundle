@@ -254,7 +254,6 @@ CREATE INDEX IDX_F352144A76ED395
 ```
 
 # What is planned to be done in future (not promised)?
-- Another part of policy, for password policy expiration
 - Custom Policy provider per entity, defined via #[Listen]
 
 # Contribute

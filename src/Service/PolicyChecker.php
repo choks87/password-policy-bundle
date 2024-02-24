@@ -56,24 +56,24 @@ final class PolicyChecker implements PolicyCheckerInterface
             $msg   = [];
             $msg[] = $this->translator->trans('violation.password_is_already_used', [], 'password_policy');
 
-            if ((int)$policy->getBackTrackCount() > 0) {
+            if ((int)$policy->getLast() > 0) {
                 $msg[] = $this->translator->trans(
                     'violation.in_last_n_passwords',
-                    ['%number%' => $policy->getBackTrackCount()],
+                    ['%number%' => $policy->getLast()],
                     'password_policy'
                 );
             }
 
             if ($policy->hasPeriod()) {
                 $unitTranslation = $this->translator->trans(
-                    'enum.'.$policy->getBackTrackTimeUnit(),
+                    'enum.'.$policy->getUnit(),
                     [],
                     'password_policy'
                 );
 
                 $msg[] = $this->translator->trans(
                     'violation.in_past_x_y',
-                    ['%number%' => $policy->getBackTrackTimeValue(), '%unit%' => $unitTranslation],
+                    ['%number%' => $policy->getPeriod(), '%unit%' => $unitTranslation],
                     'password_policy'
                 );
             }
