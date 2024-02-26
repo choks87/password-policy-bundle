@@ -32,11 +32,11 @@ final class ConfigurationPolicyProviderTest extends KernelTestCase
 
         if ($haveHistoryPolicySet) {
             $history = $config['history'];
-            self::assertEquals($history['period']['unit'], $policy->getHistoryPolicy()?->getBackTrackTimeUnit());
-            self::assertEquals($history['period']['value'], $policy->getHistoryPolicy()?->getBackTrackTimeValue());
+            self::assertEquals($history['period']['unit'], $policy->getHistoryPolicy()?->getUnit());
+            self::assertEquals($history['period']['value'], $policy->getHistoryPolicy()?->getPeriod());
             self::assertEquals(
                 $history['not_used_in_past_n_passwords'],
-                $policy->getHistoryPolicy()?->getBackTrackCount()
+                $policy->getHistoryPolicy()?->getLast()
             );
         }
     }

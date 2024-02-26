@@ -5,56 +5,28 @@ declare(strict_types=1);
 namespace Choks\PasswordPolicy\Model;
 
 use Choks\PasswordPolicy\Contract\HistoryPolicyInterface;
-use Choks\PasswordPolicy\Exception\RuntimeException;
+use Choks\PasswordPolicy\Traits\TimeFrameTrait;
 
 final class HistoryPolicy implements HistoryPolicyInterface
 {
-    public function __construct(
-        private readonly ?int    $backTrackCount,
-        private readonly ?string $backTrackTimeUnit,
-        private readonly ?int    $backTrackTimeValue,
-    ) {
-    }
+    use TimeFrameTrait;
 
-    public function getBackTrackTimeUnit(): ?string
-    {
-        return $this->backTrackTimeUnit;
-    }
+    private readonly ?int $last;
 
-    public function getBackTrackTimeValue(): ?int
+    public function __construct(?int $last, ?string $unit, ?int $period)
     {
-        return $this->backTrackTimeValue;
+        $this->last   = $last;
+        $this->unit   = $unit;
+        $this->period = $period;
     }
 
     public function isValid(): bool
     {
-        return !empty($this->backTrackCount) || $this->hasPeriod();
+        return !empty($this->last) || $this->hasPeriod();
     }
 
-    public function getBackTrackCount(): ?int
+    public function getLast(): ?int
     {
-        return $this->backTrackCount;
-    }
-
-    public function hasPeriod(): bool
-    {
-        return !empty($this->backTrackTimeUnit) && !empty($this->backTrackTimeValue);
-    }
-
-    public function backTrackStartDateTime(): \DateTimeImmutable
-    {
-        if (!$this->hasPeriod()) {
-            throw new RuntimeException('History Time period cannot be determined. Not configured.');
-        }
-
-        $interval = \DateInterval::createFromDateString(
-            \sprintf("%d %s", $this->backTrackTimeValue, $this->backTrackTimeUnit)
-        );
-
-        if (false === $interval) {
-            throw new RuntimeException('History Time period cannot be determined. Bad interval.');
-        }
-
-        return (new \DateTimeImmutable())->sub($interval);
+        return $this->last;
     }
 }

@@ -9,6 +9,7 @@ use Choks\PasswordPolicy\Tests\KernelWithDbalAdapterTestCase;
 use Choks\PasswordPolicy\Tests\Resources\App\Entity\ListenedSubject;
 use Choks\PasswordPolicy\Tests\Resources\App\Entity\Subject;
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Exception\InvalidFieldNameException;
 use Doctrine\ORM\EntityManagerInterface;
 
 final class PasswordPolicyAttributeListenerTest extends KernelWithDbalAdapterTestCase
@@ -34,8 +35,6 @@ final class PasswordPolicyAttributeListenerTest extends KernelWithDbalAdapterTes
 
         $this->entityManager->persist($subject);
         $this->entityManager->flush($subject);
-
-        self::assertNotNull($this->entityManager->refresh($subject));
     }
 
     public function testSuccessfulSaveInHistory(): void

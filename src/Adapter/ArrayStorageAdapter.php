@@ -5,6 +5,9 @@ namespace Choks\PasswordPolicy\Adapter;
 
 use Choks\PasswordPolicy\Contract\PasswordPolicySubjectInterface;
 use Choks\PasswordPolicy\Contract\StorageAdapterInterface;
+use Choks\PasswordPolicy\Criteria\SearchCriteria;
+use Choks\PasswordPolicy\Enum\Order;
+use Choks\PasswordPolicy\ValueObject\PasswordRecord;
 
 /**
  * @psalm-type Item = array{
@@ -46,27 +49,44 @@ final class ArrayStorageAdapter implements StorageAdapterInterface
     }
 
     /**
-     * @return iterable<string>
+     * {@inheritDoc}
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      */
-    public function getPastPasswords(
-        PasswordPolicySubjectInterface $subject,
-        ?int                           $lastN = null,
-        ?\DateTimeImmutable            $startingFrom = null,
-    ): iterable {
-        $list  = \array_filter(\array_reverse($this->list), static function (array $item) use ($subject){
-            return $item['subject_id'] === $subject->getIdentifier();
-        });
+    public function get(SearchCriteria $criteria): iterable
+    {
+        $list = $this->list;
 
-        foreach ($list as $index => $item) {
-            if (null !== $lastN && ($index + 1) > $lastN) {
+        if (null !== $criteria->getSubject()) {
+            $list = \array_filter($list, static function (array $item) use ($criteria) {
+                return (string)$item['subject_id'] === $criteria->getSubject()->getIdentifier();
+            });
+        }
+
+        if (Order::DESC === $criteria->getOrder()) {
+            $list = \array_reverse($list);
+        }
+
+        $recordCount = 0;
+        foreach ($list as $item) {
+            if (null !== $criteria->getStartDate() && $item['created_at'] < $criteria->getStartDate()) {
+                continue;
+            }
+
+            if (null !== $criteria->getEndDate() && $item['created_at'] > $criteria->getEndDate()) {
+                continue;
+            }
+
+            if (null !== $criteria->getLimit() && $recordCount >= $criteria->getLimit()) {
                 break;
             }
 
-            if (null !== $startingFrom && $item['created_at'] < $startingFrom) {
-                break;
-            }
+            yield new PasswordRecord(
+                (string)$item['subject_id'],
+                $item['password'],
+                $item['created_at'],
+            );
 
-            yield $item['password'];
+            $recordCount++;
         }
     }
 

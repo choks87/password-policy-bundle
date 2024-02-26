@@ -5,12 +5,17 @@ namespace Choks\PasswordPolicy\Tests\Adapter;
 
 use Choks\PasswordPolicy\Adapter\CacheStorageAdapter;
 use Choks\PasswordPolicy\Contract\StorageAdapterInterface;
+use Choks\PasswordPolicy\Criteria\SearchCriteria;
+use Choks\PasswordPolicy\Enum\Order;
+use Choks\PasswordPolicy\Tests\AdapterTestTrait;
 use Choks\PasswordPolicy\Tests\KernelTestCase;
 use Choks\PasswordPolicy\Tests\Resources\App\Entity\Subject;
 use Symfony\Component\Cache\Adapter\AdapterInterface;
 
 final class CacheAdapterTest extends KernelTestCase
 {
+    use AdapterTestTrait;
+
     private StorageAdapterInterface $storageAdapter;
 
     private AdapterInterface $cache;
@@ -49,7 +54,9 @@ final class CacheAdapterTest extends KernelTestCase
         $this->storageAdapter->add($subject, 'waldoo');
         $this->storageAdapter->add($subject, 'fruit');
         $expected = ['fruit', 'waldoo', 'baz'];
-        self::assertEquals($expected, [...$this->storageAdapter->getPastPasswords($subject)]);
+        $criteria = (new SearchCriteria())->setSubject($subject)->setOrder(Order::DESC);
+
+        self::assertEquals($expected, $this->getPasswords($criteria));
     }
 
     public function testGetPastNPasswords(): void
@@ -60,8 +67,10 @@ final class CacheAdapterTest extends KernelTestCase
         $this->storageAdapter->add($subject, 'waldoo');
         $this->storageAdapter->add($subject, 'fruit');
 
-        $expected = ['fruit', 'waldoo'];
-        self::assertEquals($expected, [...$this->storageAdapter->getPastPasswords($subject, 2)]);
+        $expected = ['baz', 'waldoo'];
+        $criteria = (new SearchCriteria())->setSubject($subject)->setLimit(2);
+
+        self::assertEquals($expected, $this->getPasswords($criteria));
     }
 
     public function testGetPastPasswordsWithStartingFrom(): void
@@ -89,8 +98,12 @@ final class CacheAdapterTest extends KernelTestCase
         $this->cache->save($cacheItem);
 
         $expected = ['fruit'];
-        $data     = $this->storageAdapter->getPastPasswords($subject, 2, new \DateTimeImmutable('-40 minutes'));
-        self::assertEquals($expected, [...$data]);
+        $criteria = (new SearchCriteria())
+            ->setSubject($subject)
+            ->setStartDate(new \DateTimeImmutable('-40 minutes'))
+            ->setLimit(2)
+        ;
+        self::assertEquals($expected, $this->getPasswords($criteria));
     }
 
     public function testClear(): void
@@ -101,10 +114,12 @@ final class CacheAdapterTest extends KernelTestCase
         $this->storageAdapter->add($subject, 'waldoo');
         $this->storageAdapter->add($subject, 'fruit');
 
-        self::assertNotEmpty([...$this->storageAdapter->getPastPasswords($subject)]);
+        $criteria = (new SearchCriteria())->setSubject($subject);
+
+        self::assertNotEmpty($this->getPasswords($criteria));
 
         $this->storageAdapter->clear();
 
-        self::assertEmpty([...$this->storageAdapter->getPastPasswords($subject)]);
+        self::assertEmpty($this->getPasswords($criteria));
     }
 }

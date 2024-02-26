@@ -3,9 +3,11 @@ declare(strict_types=1);
 
 namespace Choks\PasswordPolicy\Tests\Adapter;
 
-use Choks\PasswordPolicy\Adapter\CacheStorageAdapter;
 use Choks\PasswordPolicy\Adapter\DbalStorageAdapter;
 use Choks\PasswordPolicy\Contract\StorageAdapterInterface;
+use Choks\PasswordPolicy\Criteria\SearchCriteria;
+use Choks\PasswordPolicy\Enum\Order;
+use Choks\PasswordPolicy\Tests\AdapterTestTrait;
 use Choks\PasswordPolicy\Tests\KernelWithDbalAdapterTestCase;
 use Choks\PasswordPolicy\Tests\Resources\App\Entity\Subject;
 use Doctrine\DBAL\Connection;
@@ -13,6 +15,8 @@ use Doctrine\DBAL\Types\Types;
 
 final class DbalAdapterTest extends KernelWithDbalAdapterTestCase
 {
+    use AdapterTestTrait;
+
     private StorageAdapterInterface $storageAdapter;
 
     private Connection $connection;
@@ -35,7 +39,7 @@ final class DbalAdapterTest extends KernelWithDbalAdapterTestCase
 
     public function testRemove(): void
     {
-        $sql = 'SELECT * FROM password_history';
+        $sql     = 'SELECT * FROM password_history';
         $subject = new Subject(1, 'bar');
 
         $this->storageAdapter->add($subject, 'baz');
@@ -50,7 +54,6 @@ final class DbalAdapterTest extends KernelWithDbalAdapterTestCase
         $subject = new Subject(1, 'bar');
 
 
-
         $this->storageAdapter->add($subject, 'baz');
         sleep(1);
         $this->storageAdapter->add($subject, 'waldoo');
@@ -58,7 +61,8 @@ final class DbalAdapterTest extends KernelWithDbalAdapterTestCase
         $this->storageAdapter->add($subject, 'fruit');
 
         $expected = ['fruit', 'waldoo', 'baz'];
-        self::assertEquals($expected, [...$this->storageAdapter->getPastPasswords($subject)]);
+        $criteria = (new SearchCriteria())->setSubject($subject)->setOrder(Order::DESC);
+        self::assertEquals($expected, $this->getPasswords($criteria));
     }
 
     public function testGetPastNPasswords(): void
@@ -71,8 +75,9 @@ final class DbalAdapterTest extends KernelWithDbalAdapterTestCase
         sleep(1);
         $this->storageAdapter->add($subject, 'fruit');
 
-        $expected = ['fruit', 'waldoo'];
-        self::assertEquals($expected, [...$this->storageAdapter->getPastPasswords($subject, 2)]);
+        $expected = ['baz', 'waldoo'];
+        $criteria = (new SearchCriteria())->setSubject($subject)->setLimit(2);
+        self::assertEquals($expected, $this->getPasswords($criteria));
     }
 
     public function testGetPastPasswordsWithStartingFrom(): void
@@ -84,8 +89,12 @@ final class DbalAdapterTest extends KernelWithDbalAdapterTestCase
         $this->addMockedRecord($subject, 'fruit', new \DateTimeImmutable('-30 minutes'));
 
         $expected = ['fruit'];
-        $data     = $this->storageAdapter->getPastPasswords($subject, 2, new \DateTimeImmutable('-40 minutes'));
-        self::assertEquals($expected, [...$data]);
+
+        $criteria = (new SearchCriteria())
+            ->setSubject($subject)
+            ->setLimit(2)
+            ->setStartDate(new \DateTimeImmutable('-40 minutes'));
+        self::assertEquals($expected, $this->getPasswords($criteria));
     }
 
     public function testClear(): void
@@ -96,11 +105,13 @@ final class DbalAdapterTest extends KernelWithDbalAdapterTestCase
         $this->storageAdapter->add($subject, 'waldoo');
         $this->storageAdapter->add($subject, 'fruit');
 
-        self::assertNotEmpty([...$this->storageAdapter->getPastPasswords($subject)]);
+        $criteria = (new SearchCriteria())->setSubject($subject);
+
+        self::assertNotEmpty($this->getPasswords($criteria));
 
         $this->storageAdapter->clear();
 
-        self::assertEmpty([...$this->storageAdapter->getPastPasswords($subject)]);
+        self::assertEmpty($this->getPasswords($criteria));
     }
 
     private function addMockedRecord(Subject $subject, string $password, \DateTimeImmutable $createdAt): void
@@ -108,12 +119,12 @@ final class DbalAdapterTest extends KernelWithDbalAdapterTestCase
         $this->connection
             ->insert('password_history',
                      [
-                         'subject_id'    => $subject->getIdentifier(),
+                         'subject_id' => $subject->getIdentifier(),
                          'password'   => $password,
                          'created_at' => $createdAt,
                      ],
                      [
-                         'created_at'   => Types::DATETIME_IMMUTABLE,
+                         'created_at' => Types::DATETIME_IMMUTABLE,
                      ],
             )
         ;

@@ -8,6 +8,7 @@ use Choks\PasswordPolicy\Contract\PolicyInterface;
 use Choks\PasswordPolicy\Contract\PolicyProviderInterface;
 use Choks\PasswordPolicy\Enum\PeriodUnit;
 use Choks\PasswordPolicy\Model\CharacterPolicy;
+use Choks\PasswordPolicy\Model\ExpirationPolicy;
 use Choks\PasswordPolicy\Model\HistoryPolicy;
 use Choks\PasswordPolicy\Model\Policy;
 
@@ -20,6 +21,13 @@ use Choks\PasswordPolicy\Model\Policy;
  *           }
  *       }
  *
+ * @psalm-type ExpirationConfig = array{
+ *            expires_after: array{
+ *                unit: value-of<PeriodUnit>|null,
+ *                value: integer|null
+ *            }
+ *        }
+ *
  * @psalm-type CharacterConfig = array{
  *           min_length: integer|null,
  *           numbers: integer|null,
@@ -29,8 +37,9 @@ use Choks\PasswordPolicy\Model\Policy;
  *       }
  *
  * @psalm-type Config = array{
- *      character: CharacterConfig,
- *      history: HistoryConfig
+ *      character: CharacterConfig|array{}|null,
+ *      expiration: ExpirationConfig|array{}|null,
+ *      history: HistoryConfig|array{}|null
  * }
  */
 final class ConfigurationPolicyProvider implements PolicyProviderInterface
@@ -44,43 +53,88 @@ final class ConfigurationPolicyProvider implements PolicyProviderInterface
 
     public function getPolicy(PasswordPolicySubjectInterface $subject): PolicyInterface
     {
-        $historyConfig   = $this->config['history'];
-        $characterConfig = $this->config['character'];
-
         return new Policy(
-            $this->hasCharacterPolicy($characterConfig) ? new CharacterPolicy(
-                $characterConfig['min_length'],
-                $characterConfig['numbers'],
-                $characterConfig['lowercase'],
-                $characterConfig['uppercase'],
-                $characterConfig['special'],
-            ) : null,
-            $this->hasHistoryPolicy($historyConfig) ? new HistoryPolicy(
-                $historyConfig['not_used_in_past_n_passwords'],
-                $historyConfig['period']['unit'],
-                $historyConfig['period']['value'],
-            ) : null
+            $this->createExpirationPolicy($this->config),
+            $this->createCharacterPolicy($this->config),
+            $this->createHistoryPolicy($this->config)
         );
     }
 
     /**
-     * @param  CharacterConfig  $characterConfig
+     * @param  Config  $policyConfig
      */
-    private function hasCharacterPolicy(array $characterConfig): bool
+    private function createCharacterPolicy(array $policyConfig): ?CharacterPolicy
     {
-        return null !== $characterConfig['min_length'] ||
-               null !== $characterConfig['numbers'] ||
-               null !== $characterConfig['lowercase'] ||
-               null !== $characterConfig['uppercase'] ||
-               null !== $characterConfig['special'];
+        if (empty($policyConfig['character'])) {
+            return null;
+        }
+
+        $characterConfig = $policyConfig['character'];
+
+        if (!isset($characterConfig['min_length'],
+            $characterConfig['numbers'],
+            $characterConfig['lowercase'],
+            $characterConfig['uppercase'],
+            $characterConfig['special'])) {
+            return null;
+        }
+
+        return new CharacterPolicy(
+            $characterConfig['min_length'],
+            $characterConfig['numbers'],
+            $characterConfig['lowercase'],
+            $characterConfig['uppercase'],
+            $characterConfig['special'],
+        );
     }
 
     /**
-     * @param  HistoryConfig  $historyConfig
+     * @param  Config  $policyConfig
      */
-    private function hasHistoryPolicy(array $historyConfig): bool
+    private function createHistoryPolicy(array $policyConfig): ?HistoryPolicy
     {
-        return null !== $historyConfig['not_used_in_past_n_passwords'] ||
-               (null !== $historyConfig['period']['unit'] && null !== $historyConfig['period']['value']);
+        if (empty($policyConfig['history'])) {
+            return null;
+        }
+
+        $historyConfig = $policyConfig['history'];
+
+        if (empty($historyConfig['not_used_in_past_n_passwords'])
+            &&
+            (empty($historyConfig['period']['unit']) || empty($historyConfig['period']['value']))
+        ) {
+            return null;
+        }
+
+        return new HistoryPolicy(
+            $historyConfig['not_used_in_past_n_passwords'],
+            $historyConfig['period']['unit'],
+            $historyConfig['period']['value'],
+        );
+    }
+
+    /**
+     * @param  Config  $policyConfig
+     */
+    private function createExpirationPolicy(array $policyConfig): ?ExpirationPolicy
+    {
+        if (empty($policyConfig['expiration'])) {
+            return null;
+        }
+
+        $expirationConfig = $policyConfig['expiration'];
+
+        if (null === $expirationConfig['expires_after']['unit']) {
+            return null;
+        }
+
+        if (null === $expirationConfig['expires_after']['value']) {
+            return null;
+        }
+
+        return new ExpirationPolicy(
+            $expirationConfig['expires_after']['unit'],
+            $expirationConfig['expires_after']['value'],
+        );
     }
 }

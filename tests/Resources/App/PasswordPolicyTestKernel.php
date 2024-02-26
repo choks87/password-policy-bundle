@@ -47,14 +47,20 @@ class PasswordPolicyTestKernel extends Kernel
                 'storage' => $this->getStorageConfig(),
                 'salt'    => 'foo',
                 'policy'  => [
-                    'character' => [
+                    'expiration' => [
+                        'expires_after' => [
+                            'unit'  => PeriodUnit::DAY->value,
+                            'value' => 1,
+                        ],
+                    ],
+                    'character'  => [
                         'min_length' => 8,
                         'numbers'    => 1,
                         'lowercase'  => 1,
                         'uppercase'  => 1,
                         'special'    => 1,
                     ],
-                    'history'   => [
+                    'history'    => [
                         'not_used_in_past_n_passwords' => 3,
                         'period'                       => [
                             'unit'  => PeriodUnit::DAY->value,
@@ -88,9 +94,9 @@ class PasswordPolicyTestKernel extends Kernel
                 'php_errors'            => [
                     'log' => true,
                 ],
-                'cache' => [
-                    'app' => 'cache.adapter.array'
-                ]
+                'cache'                 => [
+                    'app' => 'cache.adapter.array',
+                ],
             ]
         );
 

@@ -8,7 +8,10 @@ use Choks\PasswordPolicy\Contract\PasswordPolicySubjectInterface;
 use Choks\PasswordPolicy\Contract\StorageAdapterInterface;
 use Choks\PasswordPolicy\Contract\HistoryPolicyInterface;
 use Choks\PasswordPolicy\Contract\PasswordHistoryInterface;
+use Choks\PasswordPolicy\Criteria\SearchCriteria;
+use Choks\PasswordPolicy\Enum\Order;
 use Choks\PasswordPolicy\Exception\InvalidArgumentException;
+use Choks\PasswordPolicy\ValueObject\PasswordRecord;
 
 final class PasswordHistory implements PasswordHistoryInterface
 {
@@ -43,10 +46,10 @@ final class PasswordHistory implements PasswordHistoryInterface
             return false;
         }
 
-        $pastPasswords = $this->fetch($subject, $historyPolicy);
+        $records = $this->fetch($subject, $historyPolicy);
 
-        foreach ($pastPasswords as $pastPassword) {
-            if ($this->crypt->decrypt($pastPassword) === $subject->getPlainPassword()) {
+        foreach ($records as $record) {
+            if ($this->crypt->decrypt($record->getHashedPassword()) === $subject->getPlainPassword()) {
                 return true;
             }
         }
@@ -60,14 +63,27 @@ final class PasswordHistory implements PasswordHistoryInterface
     }
 
     /**
-     * @return iterable<string>
+     * @return iterable<PasswordRecord>
      */
-    private function fetch(PasswordPolicySubjectInterface $user, HistoryPolicyInterface $historyPolicy): iterable
+    private function fetch(PasswordPolicySubjectInterface $subject, HistoryPolicyInterface $historyPolicy): iterable
     {
-        $lastN        = $historyPolicy->getBackTrackCount();
-        $startingFrom = $historyPolicy->hasPeriod() ? $historyPolicy->backTrackStartDateTime() : null;
+        $lastN        = $historyPolicy->getLast();
+        $startingFrom = $historyPolicy->hasPeriod() ? $historyPolicy->getTimeInPast() : null;
 
-        return $this->adapter->getPastPasswords($user, $lastN, $startingFrom);
+        $criteria = (new SearchCriteria())
+            ->setSubject($subject)
+            ->setOrder(Order::DESC)
+        ;
+
+        if (null !== $lastN) {
+            $criteria->setLimit($lastN);
+        }
+
+        if (null !== $startingFrom) {
+            $criteria->setStartDate($startingFrom);
+        }
+
+        return $this->adapter->get($criteria);
     }
 
 }
