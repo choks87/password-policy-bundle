@@ -13,7 +13,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 final class ClearHistoryCommand extends Command
 {
     public function __construct(private readonly PasswordHistory $passwordHistory,) {
-        parent::__construct('password-policy:clear:history');
+        parent::__construct('password-policy:history:clear');
     }
 
     protected function configure(): void

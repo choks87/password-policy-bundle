@@ -41,6 +41,10 @@ And two ways of specifying the policy in your application:
 ```yaml
 password_policy:
   policy:
+    expiration:
+      expires_after:
+        unit: 'month' # Possible values are 'day', 'week', 'year' (Enum: Choks\PasswordPolicy\Enum\PeriodUnit)
+        value: 1
     character:
       min_length: 8 # Minimum password length, leave null if you don't want to use
       numbers: 1 # At least how many numbers there? Leave null if you don't want to use
@@ -65,6 +69,7 @@ Here is an example of your custom Policy Provider.
 ```php
 use Choks\PasswordPolicy\Contract\PolicyInterface;
 use Choks\PasswordPolicy\Contract\PolicyProviderInterface;
+use Choks\PasswordPolicy\Model\ExpirationPolicy;
 use Choks\PasswordPolicy\Model\CharacterPolicy;
 use Choks\PasswordPolicy\Model\HistoryPolicy;
 use Choks\PasswordPolicy\Model\Policy;
@@ -77,18 +82,9 @@ final class MyCustomPolicyProvider implements PolicyProviderInterface
         $policyData = $this->entityManager->getRepository()->yourOwnWayOfFetchingData();
 
         return new Policy(
-            new CharacterPolicy(
-                $policyData['min_length'],
-                $policyData['numbers'],
-                $policyData['lowercase'],
-                $policyData['uppercase'],
-                $policyData['special'],
-            )
-            new HistoryPolicy(
-                $policyData['not_used_in_past_n_passwords'],
-                $policyData['period_unit'],
-                $policyData['period_value'],
-            )
+            new ExpirationPolicy(/* Use your stored data to construct */),
+            new CharacterPolicy(/* Use your stored data to construct */),
+            new HistoryPolicy(/* Use your stored data to construct */),
         );
     }
 }
@@ -178,7 +174,21 @@ In some cases, you want to clear all passwords from history.
 Probably after update of this bundle, or when you change policy or so.
 You can do that by executing a command:
 ```bash
-bin/console password-policy:clear:history
+bin/console password-policy:history:clear
+```
+
+## Expiration
+You can set also set expiration policy. If you want to get expired password, or passwords, you can use:
+```php
+  $expirationService = $this->getContainer()->get('password_policy.expiration');
+  $password = $expirationService->getExpired($user); // Returns Choks\PasswordPolicy\ValueObject\Password
+```
+If you want to use it in your services, inject with autowire `Choks\PasswordPolicy\Contract\PasswordExpirationInterface`
+For more customization, you can also call method processExpired and
+`Choks\PasswordPolicy\Event\ExpiredPasswordEvent` will be dispatched, so you can listen and catch it,
+if last password is found to be expired:
+```php
+$password = $expirationService->processExpired($user);
 ```
 
 ## Why plain password? Is it safe?
@@ -210,6 +220,10 @@ password_policy:
 
   # This policy is what would be used in your application as policy, if you don't specify your own provider
   policy:
+    expiration:
+      expires_after:
+        unit: 'month' # Possible values are 'day', 'week', 'year' (Enum: Choks\PasswordPolicy\Enum\PeriodUnit)
+        value: 1
     character:
       min_length: 8 # Minimum password length (default is null)
       numbers: 1 # At least how many numbers there? (default is null)

@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace Choks\PasswordPolicy\Tests;
 
 use Choks\PasswordPolicy\Criteria\SearchCriteria;
-use Choks\PasswordPolicy\ValueObject\PasswordRecord;
+use Choks\PasswordPolicy\ValueObject\Password;
 
 trait AdapterTestTrait
 {
@@ -13,8 +13,9 @@ trait AdapterTestTrait
      */
     private function getPasswords(SearchCriteria $criteria): array
     {
+        $passwords = [...$this->storageAdapter->get($criteria)];
         return \array_map(
-            static fn(PasswordRecord $record) => $record->getHashedPassword(),
+            static fn(Password $password) => $password->getHashedPassword(),
             [...$this->storageAdapter->get($criteria)]
         );
     }

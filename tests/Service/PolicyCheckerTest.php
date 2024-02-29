@@ -30,7 +30,7 @@ final class PolicyCheckerTest extends KernelTestCase
         self::assertCount($expectedViolationCount, $violations->getViolations());
     }
 
-    public function providerForValidateTest(): iterable
+    public static function providerForValidateTest(): iterable
     {
         yield 'Password is empty string' => ['', 5];
         yield 'Password is empty spaced string' => ['       ', 5];

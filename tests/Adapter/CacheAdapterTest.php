@@ -10,6 +10,7 @@ use Choks\PasswordPolicy\Enum\Order;
 use Choks\PasswordPolicy\Tests\AdapterTestTrait;
 use Choks\PasswordPolicy\Tests\KernelTestCase;
 use Choks\PasswordPolicy\Tests\Resources\App\Entity\Subject;
+use Choks\PasswordPolicy\ValueObject\Password;
 use Symfony\Component\Cache\Adapter\AdapterInterface;
 
 final class CacheAdapterTest extends KernelTestCase
@@ -28,21 +29,21 @@ final class CacheAdapterTest extends KernelTestCase
 
     public function testAdd(): void
     {
-        self::assertFalse($this->cache->hasItem('foo_1'));
+        self::assertFalse($this->cache->hasItem('foo_bar'));
 
-        $this->storageAdapter->add(new Subject(1, 'bar'), 'baz');
+        $this->storageAdapter->add(new Password('bar', 'baz'));
 
-        self::assertTrue($this->cache->hasItem('foo_1'));
+        self::assertTrue($this->cache->hasItem('foo_bar'));
     }
 
     public function testRemove(): void
     {
-        $subject = new Subject(1, 'bar');
+        $subject = new Subject('bar', 'baz');
 
-        $this->storageAdapter->add($subject, 'baz');
-        self::assertTrue($this->cache->hasItem('foo_1'));
-        $this->storageAdapter->remove($subject);
-        self::assertFalse($this->cache->hasItem('foo_1'));
+        $this->storageAdapter->add(new Password($subject->getIdentifier(), 'waldoo'));
+        self::assertTrue($this->cache->hasItem('foo_bar'));
+        $this->storageAdapter->removeForSubject($subject);
+        self::assertFalse($this->cache->hasItem('foo_bar'));
 
     }
 
@@ -50,9 +51,9 @@ final class CacheAdapterTest extends KernelTestCase
     {
         $subject = new Subject(1, 'bar');
 
-        $this->storageAdapter->add($subject, 'baz');
-        $this->storageAdapter->add($subject, 'waldoo');
-        $this->storageAdapter->add($subject, 'fruit');
+        $this->storageAdapter->add(new Password($subject->getIdentifier(), 'baz'));
+        $this->storageAdapter->add(new Password($subject->getIdentifier(), 'waldoo'));
+        $this->storageAdapter->add(new Password($subject->getIdentifier(), 'fruit'));
         $expected = ['fruit', 'waldoo', 'baz'];
         $criteria = (new SearchCriteria())->setSubject($subject)->setOrder(Order::DESC);
 
@@ -63,9 +64,9 @@ final class CacheAdapterTest extends KernelTestCase
     {
         $subject = new Subject(1, 'bar');
 
-        $this->storageAdapter->add($subject, 'baz');
-        $this->storageAdapter->add($subject, 'waldoo');
-        $this->storageAdapter->add($subject, 'fruit');
+        $this->storageAdapter->add(new Password($subject->getIdentifier(), 'baz'));
+        $this->storageAdapter->add(new Password($subject->getIdentifier(), 'waldoo'));
+        $this->storageAdapter->add(new Password($subject->getIdentifier(), 'fruit'));
 
         $expected = ['baz', 'waldoo'];
         $criteria = (new SearchCriteria())->setSubject($subject)->setLimit(2);
@@ -75,25 +76,25 @@ final class CacheAdapterTest extends KernelTestCase
 
     public function testGetPastPasswordsWithStartingFrom(): void
     {
-        $subject = new Subject(1, 'bar');
+        $subject = new Subject('bar', 'baz');
 
-        $cacheItem = $this->cache->getItem('foo_1');
+        $cacheItem = $this->cache->getItem('foo_bar');
         $cacheItem->set([
-                            [
-                                'subject'    => $subject->getIdentifier(),
-                                'password'   => 'baz',
-                                'created_at' => new \DateTimeImmutable('-2 hour'),
-                            ],
-                            [
-                                'subject'    => $subject->getIdentifier(),
-                                'password'   => 'waldoo',
-                                'created_at' => new \DateTimeImmutable('-1 hour'),
-                            ],
-                            [
-                                'subject'    => $subject->getIdentifier(),
-                                'password'   => 'fruit',
-                                'created_at' => new \DateTimeImmutable('-30 minutes'),
-                            ],
+                            new Password(
+                                $subject->getIdentifier(),
+                                'baz',
+                                new \DateTimeImmutable('-2 hour'),
+                            ),
+                            new Password(
+                                $subject->getIdentifier(),
+                                'waldoo',
+                                new \DateTimeImmutable('-1 hour'),
+                            ),
+                            new Password(
+                                $subject->getIdentifier(),
+                                'fruit',
+                                new \DateTimeImmutable('-30 minutes'),
+                            ),
                         ]);
         $this->cache->save($cacheItem);
 
@@ -108,11 +109,11 @@ final class CacheAdapterTest extends KernelTestCase
 
     public function testClear(): void
     {
-        $subject = new Subject(1, 'bar');
+        $subject = new Subject('bar', 'baz');
 
-        $this->storageAdapter->add($subject, 'baz');
-        $this->storageAdapter->add($subject, 'waldoo');
-        $this->storageAdapter->add($subject, 'fruit');
+        $this->storageAdapter->add(new Password($subject->getIdentifier(), 'baz'));
+        $this->storageAdapter->add(new Password($subject->getIdentifier(), 'waldoo'));
+        $this->storageAdapter->add(new Password($subject->getIdentifier(), 'fruit'));
 
         $criteria = (new SearchCriteria())->setSubject($subject);
 

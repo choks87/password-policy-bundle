@@ -9,7 +9,9 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[Listen]
 #[ORM\Entity]
-final class ListenedSubject extends Subject
+final class ListenedSubject extends AbstractSubject
 {
-
+    #[ORM\Id]
+    #[ORM\Column]
+    public int|string $id;
 }

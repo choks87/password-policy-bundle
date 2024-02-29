@@ -7,7 +7,7 @@ use Choks\PasswordPolicy\Contract\PasswordPolicySubjectInterface;
 use Choks\PasswordPolicy\Contract\StorageAdapterInterface;
 use Choks\PasswordPolicy\Criteria\SearchCriteria;
 use Choks\PasswordPolicy\Exception\StorageException;
-use Choks\PasswordPolicy\ValueObject\PasswordRecord;
+use Choks\PasswordPolicy\ValueObject\Password;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Exception;
 use Doctrine\DBAL\Types\Types;
@@ -21,7 +21,7 @@ final class DbalStorageAdapter implements StorageAdapterInterface
     ) {
     }
 
-    public function add(PasswordPolicySubjectInterface $subject, string $hashedPassword): void
+    public function add(Password $password): void
     {
         try {
 
@@ -29,9 +29,9 @@ final class DbalStorageAdapter implements StorageAdapterInterface
                 ->connection
                 ->insert($this->tableName,
                          [
-                             'subject_id' => $subject->getIdentifier(),
-                             'password'   => $hashedPassword,
-                             'created_at' => new \DateTimeImmutable(),
+                             'subject_id' => $password->getSubjectIdentifier(),
+                             'password'   => $password->getHashedPassword(),
+                             'created_at' => $password->getCreatedAt(),
                          ],
                          [
                              'created_at' => Types::DATETIME_IMMUTABLE,
@@ -43,7 +43,7 @@ final class DbalStorageAdapter implements StorageAdapterInterface
         }
     }
 
-    public function remove(PasswordPolicySubjectInterface $subject): void
+    public function removeForSubject(PasswordPolicySubjectInterface $subject): void
     {
         try {
             $this->connection
@@ -103,11 +103,6 @@ final class DbalStorageAdapter implements StorageAdapterInterface
             $queryBuilder->setParameter('start_date', $criteria->getStartDate(), Types::DATETIME_IMMUTABLE);
         }
 
-        if (null !== $criteria->getEndDate()) {
-            $queryBuilder->andWhere($queryBuilder->expr()->lte('h.created_at', ':end_date'));
-            $queryBuilder->setParameter('end_date', $criteria->getEndDate(), Types::DATETIME_IMMUTABLE);
-        }
-
         if (null !== $criteria->getLimit()) {
             $queryBuilder->setMaxResults($criteria->getLimit());
         }
@@ -120,7 +115,7 @@ final class DbalStorageAdapter implements StorageAdapterInterface
              * } $item
              */
             foreach ($queryBuilder->executeQuery()->iterateAssociative() as $item) {
-                yield new PasswordRecord(
+                yield new Password(
                     (string)$item['subject_id'],
                     $item['password'],
                     new \DateTimeImmutable($item['created_at']),

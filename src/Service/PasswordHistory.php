@@ -11,7 +11,7 @@ use Choks\PasswordPolicy\Contract\PasswordHistoryInterface;
 use Choks\PasswordPolicy\Criteria\SearchCriteria;
 use Choks\PasswordPolicy\Enum\Order;
 use Choks\PasswordPolicy\Exception\InvalidArgumentException;
-use Choks\PasswordPolicy\ValueObject\PasswordRecord;
+use Choks\PasswordPolicy\ValueObject\Password;
 
 final class PasswordHistory implements PasswordHistoryInterface
 {
@@ -28,12 +28,12 @@ final class PasswordHistory implements PasswordHistoryInterface
         }
         $hashedPassword = $this->crypt->encrypt($subject->getPlainPassword());
 
-        $this->adapter->add($subject, $hashedPassword);
+        $this->adapter->add(new Password($subject->getIdentifier(), $hashedPassword));
     }
 
     public function remove(PasswordPolicySubjectInterface $subject): void
     {
-        $this->adapter->remove($subject);
+        $this->adapter->removeForSubject($subject);
     }
 
     public function isUsed(PasswordPolicySubjectInterface $subject, HistoryPolicyInterface $historyPolicy): bool
@@ -63,7 +63,7 @@ final class PasswordHistory implements PasswordHistoryInterface
     }
 
     /**
-     * @return iterable<PasswordRecord>
+     * @return iterable<Password>
      */
     private function fetch(PasswordPolicySubjectInterface $subject, HistoryPolicyInterface $historyPolicy): iterable
     {
