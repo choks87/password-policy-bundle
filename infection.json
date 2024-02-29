@@ -17,5 +17,5 @@
     "phpUnit": {
         "customPath": "vendor/bin/phpunit"
     },
-    "minMsi": 75
+    "minMsi": 80
 }

@@ -27,10 +27,6 @@ class Configuration implements ConfigurationInterface
             ->getRootNode()
                 ->addDefaultsIfNotSet()
                 ->children()
-                    ->booleanNode('enabled')
-                        ->info('Setting bundle off. Probably for debugging purposes.')
-                        ->defaultTrue()
-                    ->end()
                     ->scalarNode('policy_provider')
                         ->defaultValue(ConfigurationPolicyProvider::class)
                         ->info("Policy Provider. Default is configuration provider.")
@@ -162,10 +158,6 @@ class Configuration implements ConfigurationInterface
                             ->info('Each subject (user) password history is on key. Needs to be prefixed.')
                         ->end()
                     ->end()
-                ->end()
-
-                ->scalarNode('array')
-                    ->info('For testing only')
                 ->end()
 
             ->end();

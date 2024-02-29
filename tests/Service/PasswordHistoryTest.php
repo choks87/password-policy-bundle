@@ -6,10 +6,12 @@ namespace Choks\PasswordPolicy\Tests\Service;
 use Choks\PasswordPolicy\Adapter\ArrayStorageAdapter;
 use Choks\PasswordPolicy\Contract\HistoryPolicyInterface;
 use Choks\PasswordPolicy\Contract\StorageAdapterInterface;
+use Choks\PasswordPolicy\Criteria\SearchCriteria;
 use Choks\PasswordPolicy\Model\HistoryPolicy;
 use Choks\PasswordPolicy\Service\PasswordHistory;
 use Choks\PasswordPolicy\Tests\KernelTestCase;
 use Choks\PasswordPolicy\Tests\Resources\App\Entity\Subject;
+use Choks\PasswordPolicy\ValueObject\Password;
 
 /**
  * @group time-sensitive
@@ -53,7 +55,7 @@ final class PasswordHistoryTest extends KernelTestCase
         self::assertEquals($expectedUsed, $isUsed);
     }
 
-    public function providerForValidateTest(): iterable
+    public static function providerForValidateTest(): iterable
     {
         yield 'Password is within past 3 passwords, with no period limit' => [
             new HistoryPolicy(3, null, null),
@@ -118,7 +120,7 @@ final class PasswordHistoryTest extends KernelTestCase
         self::assertEquals($expectedUsed, $isUsed);
     }
 
-    public function providerForAddTestWithTimeFrame(): iterable
+    public static function providerForAddTestWithTimeFrame(): iterable
     {
         yield 'Password is within past passwords, but it is older than policy requests' => [
             new HistoryPolicy(3, 'day', 1),
@@ -146,18 +148,19 @@ final class PasswordHistoryTest extends KernelTestCase
 
     protected function decreaseDateTimeInStorage(int $intervalSec): void
     {
-        if (!$this->storageAdapter instanceof ArrayStorageAdapter) {
-            throw new \Exception('For test, only use ArrayStorage Adapter.');
-        }
+        $records = [...$this->storageAdapter->get(new SearchCriteria())];
+        $this->storageAdapter->clear();
 
-        $list = &$this->storageAdapter->getListByReference();
-
-        foreach ($list as $index => &$item) {
-            $item['created_at'] = $item['created_at']
-                ->setTimestamp(
-                    $item['created_at']->getTimestamp() - ($intervalSec * ($index + 1))
+        foreach ($records as $index => $item) {
+            $newRecord = new Password(
+                $item->getSubjectIdentifier(),
+                $item->getHashedPassword(),
+                $item->getCreatedAt()->setTimestamp(
+                    $item->getCreatedAt()->getTimestamp() - ($intervalSec * ($index + 1))
                 )
-            ;
+            );
+
+            $this->storageAdapter->add($newRecord);
         }
     }
 }

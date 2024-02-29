@@ -3,16 +3,15 @@ declare(strict_types=1);
 
 namespace Choks\PasswordPolicy\Event;
 
-use Choks\PasswordPolicy\Atrribute\Listen;
+use Choks\PasswordPolicy\Atrribute\PasswordPolicy;
 use Choks\PasswordPolicy\Contract\PasswordHistoryInterface;
 use Choks\PasswordPolicy\Contract\PasswordPolicySubjectInterface;
 use Choks\PasswordPolicy\Contract\PolicyCheckerInterface;
 use Choks\PasswordPolicy\Contract\PolicyProviderInterface;
 use Choks\PasswordPolicy\Exception\PolicyCheckException;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Event\OnFlushEventArgs;
 use Doctrine\ORM\Event\PostRemoveEventArgs;
-use Doctrine\ORM\Event\PreFlushEventArgs;
-use Doctrine\ORM\Event\PrePersistEventArgs;
 
 final class PasswordPolicyAttributeListener
 {
@@ -23,7 +22,7 @@ final class PasswordPolicyAttributeListener
     ) {
     }
 
-    public function preFlush(PreFlushEventArgs $eventArgs): void
+    public function onFlush(OnFlushEventArgs $eventArgs): void
     {
         $subjects = $this->getSubjects($eventArgs->getObjectManager());
         foreach ($subjects as $subject) {
@@ -80,7 +79,7 @@ final class PasswordPolicyAttributeListener
     private function hasAttribute(object $subject): bool
     {
         $reflection = new \ReflectionObject($subject);
-        $attributes = $reflection->getAttributes(Listen::class);
+        $attributes = $reflection->getAttributes(PasswordPolicy::class);
         /** @var \ReflectionAttribute<object>|null $attribute */
         $attribute = \reset($attributes);
 

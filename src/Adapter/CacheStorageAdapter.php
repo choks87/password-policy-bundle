@@ -7,55 +7,48 @@ use Choks\PasswordPolicy\Contract\PasswordPolicySubjectInterface;
 use Choks\PasswordPolicy\Contract\StorageAdapterInterface;
 use Choks\PasswordPolicy\Criteria\SearchCriteria;
 use Choks\PasswordPolicy\Enum\Order;
-use Choks\PasswordPolicy\Exception\NotImplementedException;
-use Choks\PasswordPolicy\Exception\RuntimeException;
 use Choks\PasswordPolicy\Exception\StorageException;
-use Choks\PasswordPolicy\ValueObject\PasswordRecord;
+use Choks\PasswordPolicy\ValueObject\Password;
 use Psr\Cache\InvalidArgumentException;
 use Symfony\Component\Cache\Adapter\AdapterInterface;
 
-/**
- * @psalm-type Item = array{
- *     password: string,
- *     created_at: \DateTimeImmutable
- * }
- */
 final class CacheStorageAdapter implements StorageAdapterInterface
 {
+    private const SUBJECT_LIST_KEY = 'subject_list';
+
     public function __construct(private readonly AdapterInterface $cache, private readonly string $keyPrefix)
     {
     }
 
-    public function add(PasswordPolicySubjectInterface $subject, string $hashedPassword): void
+    public function add(Password $password): void
     {
-        $cacheItem = $this->cache->getItem($this->getCacheKey($subject));
+        $passwords   = $this->getSubjectPasswords($password->getSubjectIdentifier());
+        $passwords[] = $password;
+        $this->saveSubjectPasswords($password->getSubjectIdentifier(), $passwords);
 
-        /** @var array<Item>|array{} $value */
-        $value = $cacheItem->get() ?? [];
+        $this->addToSubjectList($password->getSubjectIdentifier());
 
-        $value[] = [
-            'password'   => $hashedPassword,
-            'created_at' => new \DateTimeImmutable(),
-        ];
+    }
 
-        $cacheItem->set($value);
-        $outcome = $this->cache->save($cacheItem);
-
-        if (false === $outcome) {
-            throw new StorageException('Unable to store password into history.');
+    public function removeForSubject(PasswordPolicySubjectInterface $subject): void
+    {
+        try {
+            $this->cache->deleteItem($this->getSubjectCacheKey($subject));
+            $this->removeFromSubjectList($subject->getIdentifier());
+        } catch (InvalidArgumentException $e) {
+            throw new StorageException('Unable to remove passwords for subject.', 0, $e);
         }
     }
 
-    public function remove(PasswordPolicySubjectInterface $subject): void
+    public function clear(): void
     {
         try {
-            $this->cache->deleteItem($this->getCacheKey($subject));
+            foreach ($this->getSubjectList() as $subjectPasswordsCacheKey) {
+                $this->cache->deleteItem($this->getSubjectCacheKey($subjectPasswordsCacheKey));
+            }
+            $this->cache->deleteItem($this->getSubjectListKey());
         } catch (InvalidArgumentException $e) {
-            throw new StorageException(
-                  \sprintf("Unable to remove passwords for subject %s from history.", $subject->getIdentifier())
-                , 0,
-                  $e
-            );
+            throw new StorageException('Unable to clear all passwords from cache storage.', 0, $e);
         }
     }
 
@@ -66,35 +59,25 @@ final class CacheStorageAdapter implements StorageAdapterInterface
      */
     public function get(SearchCriteria $criteria): iterable
     {
-        if (null === $criteria->getSubject()) {
-            throw new NotImplementedException(
-                'Getting all records from cache, without specifying subject is not yet implemented.'
-            );
+        if (null !== $criteria->getSubject()) {
+            $records = $this->getSubjectPasswords($criteria->getSubject());
         }
 
-        try {
-            $cacheItem = $this->cache->getItem($this->getCacheKey($criteria->getSubject()));
-        } catch (InvalidArgumentException $e) {
-            throw new StorageException(
-                \sprintf("Unable to fetch password history records for criteria %s", $criteria),
-                0,
-                $e
-            );
+        if (null === $criteria->getSubject()) {
+            $records = [];
+            foreach ($this->getSubjectList() as $subjectIdentifier) {
+                $records = [...$records, ...$this->getSubjectPasswords($subjectIdentifier)];
+            }
         }
-        /** @var array<Item>|array{} $value */
-        $value = $cacheItem->get() ?? [];
 
         if (Order::DESC === $criteria->getOrder()) {
-            $value = \array_reverse($value);
+            $records = \array_reverse($records);
         }
 
         $recordCount = 0;
-        foreach ($value as $item) {
-            if (null !== $criteria->getStartDate() && $item['created_at'] < $criteria->getStartDate()) {
-                continue;
-            }
-
-            if (null !== $criteria->getEndDate() && $item['created_at'] > $criteria->getEndDate()) {
+        /** @var Password $item */
+        foreach ($records as $item) {
+            if (null !== $criteria->getStartDate() && $item->getCreatedAt() < $criteria->getStartDate()) {
                 continue;
             }
 
@@ -102,23 +85,124 @@ final class CacheStorageAdapter implements StorageAdapterInterface
                 break;
             }
 
-            yield new PasswordRecord(
-                $criteria->getSubject()->getIdentifier(),
-                $item['password'],
-                $item['created_at'],
-            );
+            yield $item;
 
             $recordCount++;
         }
     }
 
-    public function clear(): void
+    private function getSubjectCacheKey(PasswordPolicySubjectInterface|string $subject): string
     {
-        $this->cache->clear();
+        if ($subject instanceof PasswordPolicySubjectInterface) {
+            $subject = $subject->getIdentifier();
+        }
+
+        return \sprintf("%s_%s", $this->keyPrefix, $subject);
     }
 
-    private function getCacheKey(PasswordPolicySubjectInterface $subject): string
+    /**
+     * @return array<Password>
+     */
+    private function getSubjectPasswords(PasswordPolicySubjectInterface|string $subject): array
     {
-        return \sprintf("%s_%s", $this->keyPrefix, $subject->getIdentifier());
+        try {
+            $cacheItem = $this->cache->getItem($this->getSubjectCacheKey($subject));
+        } catch (InvalidArgumentException $e) {
+            throw new StorageException('Unable to fetch passwords from cache storage.', 0, $e);
+        }
+
+        $value = $cacheItem->get();
+
+        if (empty($value) || !is_array($value)) {
+            $value = [];
+        }
+
+        return $value;
+    }
+
+    /**
+     * @param  iterable<Password>  $passwords
+     */
+    private function saveSubjectPasswords(string $subjectId, iterable $passwords): void
+    {
+        try {
+            $cacheItem = $this->cache->getItem($this->getSubjectCacheKey($subjectId));
+        } catch (InvalidArgumentException $e) {
+            throw new StorageException('Unable to store password into history.', 0, $e);
+        }
+
+        $cacheItem->set($passwords);
+
+        $outcome = $this->cache->save($cacheItem);
+
+        if (false === $outcome) {
+            throw new StorageException('Unable to store password into history.');
+        }
+    }
+
+    private function getSubjectListKey(): string
+    {
+        return \sprintf("%s_%s", $this->keyPrefix, self::SUBJECT_LIST_KEY);
+    }
+
+    /**
+     * @return string[]
+     */
+    private function getSubjectList(): array
+    {
+        try {
+            $cacheItem = $this->cache->getItem($this->getSubjectListKey());
+        } catch (InvalidArgumentException $e) {
+            throw new StorageException('Unable to fetch subject list from cache storage.', 0, $e);
+        }
+
+        $value = $cacheItem->get();
+
+        if (empty($value) || !is_array($value)) {
+            $value = [];
+        }
+
+        return $value;
+    }
+
+    /**
+     * @param  iterable<string>  $list
+     */
+    private function saveSubjectList(iterable $list): void
+    {
+        try {
+            $cacheItem = $this->cache->getItem($this->getSubjectListKey());
+        } catch (InvalidArgumentException $e) {
+            throw new StorageException('Unable to save subject list to cache storage.', 0, $e);
+        }
+
+        $cacheItem->set($list);
+        $this->cache->save($cacheItem);
+    }
+
+    private function addToSubjectList(string $subjectIdentifier): void
+    {
+        $list = $this->getSubjectList();
+
+        if (\in_array($subjectIdentifier, $list, true)) {
+            return;
+        }
+
+        $list[] = $subjectIdentifier;
+        $this->saveSubjectList($list);
+    }
+
+    private function removeFromSubjectList(string $subjectIdentifier): void
+    {
+        $list = $this->getSubjectList();
+
+        $key = \array_search($subjectIdentifier, $list, true);
+
+        if (false === $key) {
+            return;
+        }
+
+        unset($list[$key]);
+        $this->saveSubjectList($list);
     }
 }

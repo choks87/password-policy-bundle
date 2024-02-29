@@ -1,17 +1,23 @@
 <?php
+declare(strict_types=1);
 
 namespace Choks\PasswordPolicy\Event;
 
-use Choks\PasswordPolicy\ValueObject\PasswordRecord;
+use Symfony\Contracts\EventDispatcher\Event;
 
-class ExpiredPasswordEvent
+/**
+ * This event is fired when upon checking, is determined that Subject (ex. User)
+ * has expired password as last password used
+ */
+final class ExpiredPasswordEvent extends Event
 {
+    public const NAME = 'EXPIRED_PASSWORD';
+
     public function __construct(
-        private readonly string $subjectId,
+        private readonly string             $subjectId,
         private readonly \DateTimeImmutable $expiredAt,
         private readonly \DateTimeImmutable $createdAt,
-    )
-    {
+    ) {
     }
 
     public function getSubjectIdentifier(): string

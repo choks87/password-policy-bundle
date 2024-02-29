@@ -41,7 +41,7 @@ final class ConfigurationPolicyProviderTest extends KernelTestCase
         }
     }
 
-    public function providerForGetPolicyTest(): iterable
+    public static function providerForGetPolicyTest(): iterable
     {
         yield 'Full populated config' => [
             [

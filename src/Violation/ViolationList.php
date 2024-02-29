@@ -7,10 +7,10 @@ use Choks\PasswordPolicy\Contract\PolicyInterface;
 use Choks\PasswordPolicy\Contract\ViolationInterface;
 use Choks\PasswordPolicy\Contract\ViolationListInterface;
 
-final class ViolationList implements ViolationListInterface
+final class ViolationList implements ViolationListInterface, \Countable
 {
     /**
-     * @var array<ViolationInterface>
+     * @var ViolationInterface[]
      */
     private array           $list = [];
     private PolicyInterface $policy;
@@ -37,7 +37,10 @@ final class ViolationList implements ViolationListInterface
         return !$this->empty();
     }
 
-    public function getViolations(): iterable
+    /**
+     * @return ViolationInterface[]
+     */
+    public function getViolations(): array
     {
         return $this->list;
     }
@@ -52,5 +55,10 @@ final class ViolationList implements ViolationListInterface
     public function getPolicy(): PolicyInterface
     {
         return $this->policy;
+    }
+
+    public function count(): int
+    {
+        return \count($this->list);
     }
 }

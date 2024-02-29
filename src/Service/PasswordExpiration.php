@@ -4,16 +4,17 @@ declare(strict_types=1);
 namespace Choks\PasswordPolicy\Service;
 
 use Choks\PasswordPolicy\Contract\ExpirationPolicyInterface;
+use Choks\PasswordPolicy\Contract\PasswordExpirationInterface;
 use Choks\PasswordPolicy\Contract\PasswordPolicySubjectInterface;
 use Choks\PasswordPolicy\Contract\PolicyProviderInterface;
 use Choks\PasswordPolicy\Contract\StorageAdapterInterface;
 use Choks\PasswordPolicy\Criteria\SearchCriteria;
 use Choks\PasswordPolicy\Enum\Order;
 use Choks\PasswordPolicy\Event\ExpiredPasswordEvent;
-use Choks\PasswordPolicy\ValueObject\PasswordRecord;
+use Choks\PasswordPolicy\ValueObject\Password;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
-final class PasswordExpiration
+final class PasswordExpiration implements PasswordExpirationInterface
 {
     public function __construct(
         private readonly StorageAdapterInterface  $storageAdapter,
@@ -22,7 +23,12 @@ final class PasswordExpiration
     ) {
     }
 
-    public function getExpired(PasswordPolicySubjectInterface $subject): ?PasswordRecord
+    public function isExpired(PasswordPolicySubjectInterface $subject): bool
+    {
+        return null !== $this->getExpired($subject);
+    }
+
+    public function getExpired(PasswordPolicySubjectInterface $subject): ?Password
     {
         $policy = $this->policyProvider->getPolicy($subject)->getExpirationPolicy();
         if (null === $policy || !$policy->hasPeriod()) {
@@ -33,15 +39,17 @@ final class PasswordExpiration
         $criteria
             ->setLimit(1)
             ->setOrder(Order::DESC)
-            ->setEndDate($policy->getTimeInPast())
         ;
 
-        $expired = [...$this->storageAdapter->get($criteria)];
-        if (\count($expired) === 0) {
+        $latestPasswords = [...$this->storageAdapter->get($criteria)];
+        if (\count($latestPasswords) === 0) {
             return null;
         }
 
-        return \reset($expired);
+        /** @var Password $latestPassword */
+        $latestPassword = \reset($latestPasswords);
+
+        return $latestPassword->getCreatedAt() <= $policy->getTimeInPast() ? $latestPassword : null;
     }
 
     public function processExpired(PasswordPolicySubjectInterface $subject): void
