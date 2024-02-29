@@ -66,6 +66,11 @@
                 alias="Choks\PasswordPolicy\Service\PasswordExpiration"
         />
 
+        <service
+                id="Choks\PasswordPolicy\Contract\PasswordExpirationInterface"
+                alias="Choks\PasswordPolicy\Service\PasswordExpiration"
+        />
+
 
     </services>
 </container>

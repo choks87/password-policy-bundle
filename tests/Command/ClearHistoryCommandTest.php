@@ -3,8 +3,8 @@ declare(strict_types=1);
 
 namespace Choks\PasswordPolicy\Tests\Command;
 
-use Choks\PasswordPolicy\Adapter\ArrayStorageAdapter;
 use Choks\PasswordPolicy\Contract\StorageAdapterInterface;
+use Choks\PasswordPolicy\Criteria\SearchCriteria;
 use Choks\PasswordPolicy\Service\PasswordHistory;
 use Choks\PasswordPolicy\Tests\KernelTestCase;
 use Choks\PasswordPolicy\Tests\Resources\App\Entity\Subject;
@@ -14,7 +14,7 @@ use Symfony\Component\Console\Tester\CommandTester;
 final class ClearHistoryCommandTest extends KernelTestCase
 {
     private PasswordHistory     $passwordHistory;
-    private ArrayStorageAdapter $storageAdapter;
+    private StorageAdapterInterface $storageAdapter;
 
     protected function setUp(): void
     {
@@ -26,7 +26,7 @@ final class ClearHistoryCommandTest extends KernelTestCase
     {
         $application = new Application(self::$kernel);
 
-        $command       = $application->find('password-policy:clear:history');
+        $command       = $application->find('password-policy:history:clear');
         $commandTester = new CommandTester($command);
 
         $this->addSomePasswords();
@@ -40,7 +40,7 @@ final class ClearHistoryCommandTest extends KernelTestCase
 
     private function getNumberOfRecords(): int
     {
-        return \count($this->storageAdapter->getListByReference());
+        return \count([...$this->storageAdapter->get(new SearchCriteria())]);
     }
 
     private function addSomePasswords(): void

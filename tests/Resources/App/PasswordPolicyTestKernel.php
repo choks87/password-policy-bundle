@@ -128,7 +128,9 @@ class PasswordPolicyTestKernel extends Kernel
     protected function getStorageConfig(): array
     {
         return [
-            'array' => null,
+            'cache' => [
+                'adapter' => 'cache.app'
+            ],
         ];
     }
 }

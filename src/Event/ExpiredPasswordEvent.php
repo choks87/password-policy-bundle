@@ -2,7 +2,7 @@
 
 namespace Choks\PasswordPolicy\Event;
 
-use Choks\PasswordPolicy\ValueObject\PasswordRecord;
+use Choks\PasswordPolicy\ValueObject\Password;
 
 class ExpiredPasswordEvent
 {

@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace Choks\PasswordPolicy\DependencyInjection;
 
-use Choks\PasswordPolicy\Adapter\ArrayStorageAdapter;
 use Choks\PasswordPolicy\Adapter\CacheStorageAdapter;
 use Choks\PasswordPolicy\Adapter\DbalStorageAdapter;
 use Choks\PasswordPolicy\Contract\StorageAdapterInterface;
@@ -155,11 +154,6 @@ final class Extension extends SymfonyExtension
             $definition
                 ->setArgument('$cache', new Reference($storageConfig['cache']['adapter']))
                 ->setArgument('$keyPrefix', $storageConfig['cache']['key_prefix']);
-        }
-
-        // For test only.
-        if (\array_key_exists('array', $storageConfig)) {
-            $definition          = new Definition(ArrayStorageAdapter::class);
         }
 
         $definition->setPublic(false);
