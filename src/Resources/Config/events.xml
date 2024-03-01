@@ -15,7 +15,7 @@
                 id="Choks\PasswordPolicy\Event\PasswordPolicyAttributeListener"
                 class="Choks\PasswordPolicy\Event\PasswordPolicyAttributeListener"
         >
-            <tag name="doctrine.event_listener" event="preFlush"/>
+            <tag name="doctrine.event_listener" event="onFlush"/>
             <tag name="doctrine.event_listener" event="postRemove"/>
         </service>
 

@@ -12,14 +12,6 @@ use Choks\PasswordPolicy\ValueObject\Password;
 use Psr\Cache\InvalidArgumentException;
 use Symfony\Component\Cache\Adapter\AdapterInterface;
 
-/**
- * @psalm-type Item = array{
- *     password: string,
- *     created_at: \DateTimeImmutable
- * }
- *
- * @psalm-type SubjectList = iterable<non-empty-string>
- */
 final class CacheStorageAdapter implements StorageAdapterInterface
 {
     private const SUBJECT_LIST_KEY = 'subject_list';
@@ -154,7 +146,7 @@ final class CacheStorageAdapter implements StorageAdapterInterface
     }
 
     /**
-     * @return array<string>
+     * @return string[]
      */
     private function getSubjectList(): array
     {

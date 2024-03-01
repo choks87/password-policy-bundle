@@ -136,17 +136,16 @@ By adding `#[Listen]` attribute, you are expecting bundle to automatically:
 ```php
 use Choks\PasswordPolicy\Contract\PasswordPolicySubjectInterface;
 use Doctrine\ORM\Mapping as ORM;
-use Choks\PasswordPolicy\Atrribute\Listen;
+use Choks\PasswordPolicy\Atrribute\PasswordPolicy;
 
-#[Listen]
+#[PasswordPolicy]
 #[ORM\Entity]
 class User implements PasswordPolicySubjectInterface
 {
     #[ORM\Id]
     #[ORM\Column]
     public int $id;
-
-    #[\SensitiveParameter]
+   
     public ?string $plainPassword = null;
 
     public function __construct(int $id, string $plainPassword = null)
@@ -160,6 +159,13 @@ class User implements PasswordPolicySubjectInterface
         return (string)$this->id;
     }
 
+    public function setPlainPassword(#[\SensitiveParameter] ?string $plainPassword): User
+    {
+        $this->plainPassword = $plainPassword;
+
+        return $this;
+    }
+    
     public function getPlainPassword(): ?string
     {
         return $this->plainPassword;
@@ -211,7 +217,6 @@ Note: If `getPlainPassword()` return NULL, every password policy operation will 
 # Configuration Reference
 ```yaml
 password_policy:
-  enabled: true # You can turn off this bundle
   policy_provider: ConfigurationPolicyProvider::class # You can put your own provider here
   special_chars: "\"'!@#$%^&*()_+=-`~.,;:<>[]{}\\|" # Which characters are considered special chars
   trim: true # Should we trim given password?

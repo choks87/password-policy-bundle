@@ -72,10 +72,6 @@ final class Extension extends SymfonyExtension
         $configuration = new Configuration();
         $config        = $this->processConfiguration($configuration, $configs);
 
-        if (false === $config['enabled']) {
-            return;
-        }
-
         if (empty($config['salt'])) {
             throw new InvalidConfigurationException(
                 "Salt is required in password policy configuration. Do you have APP_SECRET set?"

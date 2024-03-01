@@ -16,16 +16,13 @@
         </testsuite>
     </testsuites>
 
-    <source>
+    <coverage processUncoveredFiles="true">
         <include>
             <directory suffix=".php">src</directory>
         </include>
         <exclude>
             <directory  suffix=".php">src/Exception</directory>
         </exclude>
-    </source>
-
-    <coverage>
         <report>
             <clover outputFile=".analysis/phpunit/coverage/coverage.xml"/>
             <html outputDirectory=".analysis/phpunit/coverage"/>
@@ -35,7 +32,7 @@
     </coverage>
 
     <extensions>
-        <bootstrap class="DAMA\DoctrineTestBundle\PHPUnit\PHPUnitExtension"/>
+        <extension class="DAMA\DoctrineTestBundle\PHPUnit\PHPUnitExtension"/>
     </extensions>
 
     <logging>

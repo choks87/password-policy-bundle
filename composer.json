@@ -27,7 +27,6 @@
         "phpmd/phpmd": "*",
         "phpstan/phpstan": "*",
         "phpstan/phpstan-phpunit": "*",
-        "phpunit/php-code-coverage": "*",
         "rregeer/phpunit-coverage-check": "*",
         "symfony/test-pack": "*"
     },

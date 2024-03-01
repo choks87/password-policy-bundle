@@ -23,6 +23,11 @@ final class PasswordExpiration implements PasswordExpirationInterface
     ) {
     }
 
+    public function isExpired(PasswordPolicySubjectInterface $subject): bool
+    {
+        return null !== $this->getExpired($subject);
+    }
+
     public function getExpired(PasswordPolicySubjectInterface $subject): ?Password
     {
         $policy = $this->policyProvider->getPolicy($subject)->getExpirationPolicy();

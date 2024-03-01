@@ -24,7 +24,6 @@ final class DbalStorageAdapter implements StorageAdapterInterface
     public function add(Password $password): void
     {
         try {
-
             $this
                 ->connection
                 ->insert($this->tableName,
