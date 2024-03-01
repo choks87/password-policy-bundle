@@ -16,12 +16,12 @@
         </testsuite>
     </testsuites>
 
-    <coverage>
+    <coverage processUncoveredFiles="true">
         <include>
             <directory suffix=".php">src</directory>
         </include>
         <exclude>
-            <directory suffix=".php">src/Exception</directory>
+            <directory  suffix=".php">src/Exception</directory>
         </exclude>
         <report>
             <clover outputFile=".analysis/phpunit/coverage/coverage.xml"/>
