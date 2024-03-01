@@ -1,4 +1,4 @@
-.PHONY: setup up down attach start test code-check
+.PHONY: setup up down attach test check code-check clear
 
 # USER VARIABLES / PROJECT VARIABLES
 PHP_CONTAINER_NAME = php
@@ -8,9 +8,7 @@ DOCKER_COMPOSE_UP =  ${DOCKER_COMPOSE} up -d --force-recreate --remove-orphans
 DOCKER_COMPOSE_BUILD = ${DOCKER_COMPOSE} build --no-cache
 DOCKER_COMPOSE_DOWN =  ${DOCKER_COMPOSE} down
 DOCKER_RUN_COMMAND = docker exec -it ${PHP_CONTAINER_NAME}
-RUN_SERVER_SWOOLE = swoole:server:run
 
-CONSOLE = ./bin/console
 PHPUNIT = ./vendor/bin/phpunit -c ./phpunit.xml.dist
 COV_CHECK = ./vendor/bin/coverage-check .analysis/phpunit/coverage/coverage.xml 75
 INFECTION = ./vendor/bin/infection  --threads=1 --only-covered --skip-initial-tests --coverage=.analysis/phpunit/coverage
@@ -21,9 +19,6 @@ setup:
 	${DOCKER_COMPOSE_BUILD} && \
 	${DOCKER_COMPOSE_UP} && \
 	${DOCKER_RUN_COMMAND} composer install
-
-start:
-	${DOCKER_RUN_COMMAND} ${CONSOLE} ${RUN_SERVER_SWOOLE}
 
 up:
 	${DOCKER_COMPOSE_UP}
@@ -46,6 +41,11 @@ test:
 code-check:
 	${PHP_STAN} && ${PHP_MD}
 
+check: code-check test
+
+clear:
+	rm -rf vendor composer.lock .analysis .phpunit.result.cache && composer install
+
 help:
 	# Usage:
 	#   make <target> [OPTION=value]
@@ -57,6 +57,7 @@ help:
 	#   attach ..........................attaches to docker PHP container
 	#   test ........................... Tests & infection testing
 	#   code-check ..................... Complete code check
-	#   start ...............,.. Runs Swoole web server
+	#   check .......................... All checks before push
+	#   clear .... ..................... Complete code check
 
 
