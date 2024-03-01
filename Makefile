@@ -41,7 +41,7 @@ test:
 code-check:
 	${PHP_STAN} && ${PHP_MD}
 
-check: code-check test
+check: clear code-check test
 
 clear:
 	rm -rf vendor composer.lock .analysis .phpunit.result.cache && composer install
