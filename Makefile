@@ -1,9 +1,9 @@
 .PHONY: setup up down attach test check code-check clear
 
 # USER VARIABLES / PROJECT VARIABLES
-PHP_CONTAINER_NAME = php
+PHP_CONTAINER_NAME = password-policy-php
 
-DOCKER_COMPOSE = docker-compose
+DOCKER_COMPOSE = docker compose
 DOCKER_COMPOSE_UP =  ${DOCKER_COMPOSE} up -d --force-recreate --remove-orphans
 DOCKER_COMPOSE_BUILD = ${DOCKER_COMPOSE} build --no-cache
 DOCKER_COMPOSE_DOWN =  ${DOCKER_COMPOSE} down
@@ -11,7 +11,7 @@ DOCKER_RUN_COMMAND = docker exec -it ${PHP_CONTAINER_NAME}
 
 PHPUNIT = ./vendor/bin/phpunit -c ./phpunit.xml.dist
 COV_CHECK = ./vendor/bin/coverage-check .analysis/phpunit/coverage/coverage.xml 75
-INFECTION = ./vendor/bin/infection  --threads=1 --only-covered --skip-initial-tests --coverage=.analysis/phpunit/coverage
+INFECTION = ./vendor/bin/infection  --threads=1 --skip-initial-tests --coverage=.analysis/phpunit/coverage
 PHP_STAN = ./vendor/bin/phpstan
 PHP_MD = ./vendor/bin/phpmd src/ text phpmd_ruleset.xml
 

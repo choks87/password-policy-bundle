@@ -19,5 +19,14 @@
             <tag name="doctrine.event_listener" event="postRemove"/>
         </service>
 
+        <!-- Policy Check Exception Listener -->
+        <service
+                id="Choks\PasswordPolicy\Event\PasswordPolicyValidationExceptionListener"
+                class="Choks\PasswordPolicy\Event\PasswordPolicyValidationExceptionListener"
+        >
+            <argument key="$throwJsonBadRequest">%password_policy.produce_json_bad_request%</argument>
+            <tag name="kernel.event_listener" priority="1"/>
+        </service>
+
     </services>
 </container>

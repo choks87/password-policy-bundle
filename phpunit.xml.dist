@@ -6,8 +6,10 @@
          bootstrap="tests/phpunit.bootstrap.php"
 >
     <php>
+        <server name="APP_ENV" value="test" force="true"/>
+        <server name="SHELL_VERBOSITY" value="-1"/>
+        <ini name="error_reporting" value="1"/>
         <ini name="display_errors" value="1"/>
-        <ini name="error_reporting" value="-1"/>
     </php>
 
     <testsuites>
@@ -16,13 +18,13 @@
         </testsuite>
     </testsuites>
 
-    <coverage processUncoveredFiles="true">
+    <source>
         <include>
-            <directory suffix=".php">src</directory>
+            <directory>src</directory>
         </include>
-        <exclude>
-            <directory  suffix=".php">src/Exception</directory>
-        </exclude>
+    </source>
+
+    <coverage>
         <report>
             <clover outputFile=".analysis/phpunit/coverage/coverage.xml"/>
             <html outputDirectory=".analysis/phpunit/coverage"/>
@@ -31,11 +33,12 @@
         </report>
     </coverage>
 
-    <extensions>
-        <extension class="DAMA\DoctrineTestBundle\PHPUnit\PHPUnitExtension"/>
-    </extensions>
-
     <logging>
         <junit outputFile=".analysis/phpunit/coverage/junit.xml"/>
     </logging>
+
+    <extensions>
+        <bootstrap class="DAMA\DoctrineTestBundle\PHPUnit\PHPUnitExtension" />
+    </extensions>
+
 </phpunit>

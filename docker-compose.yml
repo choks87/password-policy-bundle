@@ -1,9 +1,7 @@
-version: '3.4'
-
 services:
   php:
-    container_name: php
-    hostname: php
+    container_name: password-policy-php
+    hostname: password-policy-php
     build:
       context: ./docker/php
       target: development

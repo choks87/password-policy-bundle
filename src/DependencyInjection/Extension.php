@@ -82,6 +82,8 @@ final class Extension extends SymfonyExtension
             $this->registerDefaultPolicyProvider($container, $config['policy']);
         }
 
+        $container->setParameter('password_policy.produce_json_bad_request', $config['produce_json_bad_request']);
+
         $container->setAlias(PolicyProviderInterface::class, $config['policy_provider']);
 
         $container->setParameter('password_policy.special_chars', $config['special_chars']);
